@@ -111,6 +111,12 @@
 			<version>1.1</version>
 		</dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.8.1</version>
+        </dependency>
+
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
@@ -282,7 +288,20 @@
 							</filters>
 						</configuration>
 					</execution>
-
+					<execution>
+						<phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson.core</pattern>
+                                    <shadedPattern>com.pirkshaded.fasterxml.jackson.core</shadedPattern>
+                                </relocation>
+                            </relocations>
+						</configuration>
+					</execution>
                     <!-- in the version with benchmarks (pom-with-benchmarks.xml), this
                         is where that <execution></execution> lives -->
 
