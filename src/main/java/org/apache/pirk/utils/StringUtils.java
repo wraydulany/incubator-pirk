@@ -18,11 +18,15 @@
  */
 package org.apache.pirk.utils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -30,9 +34,14 @@ import org.apache.hadoop.io.Writable;
 
 import org.apache.pirk.schema.data.DataSchema;
 import org.elasticsearch.hadoop.mr.WritableArrayWritable;
+
+/* To Replace: */
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+/* To use instead: */
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public class StringUtils
 {
   private static final Logger logger = LoggerFactory.getLogger(StringUtils.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   /**
    * Method to convert a MapWritable into a JSON string
@@ -53,13 +63,23 @@ public class StringUtils
   public static String mapWritableToString(MapWritable map)
   {
     // Convert to JSON and then write to a String - ensures JSON read-in compatibility
-    JSONObject jsonObj = new JSONObject();
-    for (Writable key : map.keySet())
+    //ObjectMapper mapper = new ObjectMapper();
+    String jsonString;
+    ObjectNode rootnode = mapper.createObjectNode();
+    for( Writable key : map.keySet()){
+      rootnode.put(key.toString(), map.get(key).toString());
+    }
+    try
     {
-      jsonObj.put(key.toString(), map.get(key).toString());
+      jsonString = mapper.writeValueAsString(rootnode);
+    } catch (JsonProcessingException e)
+    {
+      logger.error("Error processing MapWritable into JSON.");
+      e.printStackTrace();
+      return map.toString();
     }
 
-    return jsonObj.toJSONString();
+    return jsonString;
   }
 
   /**
@@ -68,29 +88,24 @@ public class StringUtils
   public static MapWritable jsonStringToMapWritable(String jsonString)
   {
     MapWritable value = new MapWritable();
-    JSONParser jsonParser = new JSONParser();
-
     try
     {
-      JSONObject jsonObj = (JSONObject) jsonParser.parse(jsonString);
-      for (Object key : jsonObj.keySet())
+      Map<Object, Object> tempMap = mapper.readValue(jsonString, Map.class);
+      for (Map.Entry<Object,Object> entry: tempMap.entrySet())
       {
-        Text mapKey = new Text(key.toString());
+        Text mapKey = new Text(entry.getKey().toString());
         Text mapValue = new Text();
-        if (jsonObj.get(key) != null)
-        {
-          mapValue.set(jsonObj.get(key).toString());
+        if (entry.getValue() != null){
+          mapValue.set(entry.getValue().toString());
         }
         value.put(mapKey, mapValue);
       }
-    } catch (ParseException e)
-    {
-      logger.warn("Could not json-decode string: " + jsonString, e);
-    } catch (NumberFormatException e)
-    {
-      logger.warn("Could not parse field into number: " + jsonString, e);
-    }
 
+    } catch (IOException e)
+    {
+      logger.error("Unable to parse JSON string: " + jsonString);
+      e.printStackTrace();
+    }
     return value;
   }
 
@@ -99,21 +114,25 @@ public class StringUtils
    */
   public static MapWritable jsonStringToMapWritableWithWritableArrayWritable(String jsonString, DataSchema dataSchema)
   {
+    //TODO jsonStringToMapWritableWithWritableArrayWritable
     MapWritable value = new MapWritable();
     JSONParser jsonParser = new JSONParser();
 
     try
     {
+      Map<Object, Object> tempMap = mapper.readValue(jsonString, Map.class);
       JSONObject jsonObj = (JSONObject) jsonParser.parse(jsonString);
-      for (Object key : jsonObj.keySet())
+      for (Map.Entry<Object,Object> entry: tempMap.entrySet())
+      //for (Object key : jsonObj.keySet())
       {
+        Object key = entry.getKey();
         Text mapKey = new Text(key.toString());
-        if (jsonObj.get(key) != null)
+        if (entry.getValue() != null)
         {
           logger.debug("key = " + key.toString());
           if (dataSchema.hasListRep((String) key))
           {
-            WritableArrayWritable mapValue = StringUtils.jsonArrayStringToWritableArrayWritable(jsonObj.get(key).toString());
+            WritableArrayWritable mapValue = StringUtils.jsonArrayStringToWritableArrayWritable(entry.getValue().toString());
             value.put(mapKey, mapValue);
           }
           else
@@ -129,6 +148,15 @@ public class StringUtils
     } catch (NumberFormatException e)
     {
       logger.warn("Could not parse field into number: " + jsonString, e);
+    } catch (JsonParseException e)
+    {
+      e.printStackTrace();
+    } catch (JsonMappingException e)
+    {
+      e.printStackTrace();
+    } catch (IOException e)
+    {
+      e.printStackTrace();
     }
 
     return value;
@@ -139,6 +167,7 @@ public class StringUtils
    */
   public static MapWritable jsonStringToMapWritableWithArrayWritable(String jsonString, DataSchema dataSchema)
   {
+    //TODO jsonStringToMapWritableWithArrayWritable
     MapWritable value = new MapWritable();
     JSONParser jsonParser = new JSONParser();
 
@@ -153,7 +182,7 @@ public class StringUtils
           logger.debug("key = " + key.toString());
           if (dataSchema.hasListRep((String) key))
           {
-            ArrayWritable mapValue = StringUtils.jsonArrayStringtoArrayWritable(jsonObj.get(key).toString());
+            ArrayWritable mapValue = StringUtils.jsonArrayStringToArrayWritable(jsonObj.get(key).toString());
             value.put(mapKey, mapValue);
           }
           else
@@ -179,7 +208,19 @@ public class StringUtils
    */
   public static Map<String,Object> jsonStringToMap(String jsonString, DataSchema dataSchema)
   {
+    //TODO jsonStringToMap
     Map<String,Object> value = new HashMap<>();
+    ObjectMapper mapper = new ObjectMapper();
+
+    try
+    {
+      value = mapper.readValue(jsonString, HashMap.class);
+    } catch (IOException e)
+    {
+      logger.error("Unable to parse JSON string into Map<String, Object>: " + jsonString);
+      e.printStackTrace();
+    }
+
     JSONParser jsonParser = new JSONParser();
 
     try
@@ -217,6 +258,7 @@ public class StringUtils
    */
   public static WritableArrayWritable jsonArrayStringToWritableArrayWritable(String jsonString)
   {
+    //TODO jsonArrayStringToWritableArrayWritable
     String modString = jsonString.replaceFirst("\\[", "");
     modString = modString.replaceFirst("\\]", "");
     modString = modString.replaceAll("\"", "");
@@ -233,8 +275,9 @@ public class StringUtils
   /**
    * Method to take an input json array format string and output an ArrayWritable
    */
-  public static ArrayWritable jsonArrayStringtoArrayWritable(String jsonString)
+  public static ArrayWritable jsonArrayStringToArrayWritable(String jsonString)
   {
+    //TODO jsonArrayStringToArrayWritable
     String modString = jsonString.replaceFirst("\\[", "");
     modString = modString.replaceFirst("\\]", "");
     modString = modString.replaceAll("\"", "");
@@ -253,6 +296,7 @@ public class StringUtils
    */
   public static ArrayList<String> jsonArrayStringToArrayList(String jsonString)
   {
+    //TODO jsonArrayStringToArrayList
     String modString = jsonString.replaceFirst("\\[", "");
     modString = modString.replaceFirst("\\]", "");
     modString = modString.replaceAll("\"", "");
@@ -266,6 +310,7 @@ public class StringUtils
    */
   public static String[] jsonArrayStringToList(String jsonString)
   {
+    //TODO jsonArrayStringToList
     String modString = jsonString.replaceFirst("\\[", "");
     modString = modString.replaceFirst("\\]", "");
     modString = modString.replaceAll("\"", "");
