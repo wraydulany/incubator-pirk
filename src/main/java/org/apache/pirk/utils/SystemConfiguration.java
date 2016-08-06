@@ -69,7 +69,7 @@ public class SystemConfiguration
     loadPropsFromStream(RESPONDER_PROPERTIES_FILE);
 
     // Try to load the local properties files, if they exists
-    loadPropsFromDir(LOCAL_PROPERTIES_DIR);
+    loadPropsFromDir(getProperty(LOCAL_PROPERTIES_DIR));
   }
 
   /**
@@ -194,9 +194,8 @@ public class SystemConfiguration
    */
   public static void loadPropsFromStream(String name)
   {
-    try
+    try (InputStream stream = SystemConfiguration.class.getClassLoader().getResourceAsStream(name))
     {
-      InputStream stream = SystemConfiguration.class.getClassLoader().getResourceAsStream(name);
       if (stream != null)
       {
         logger.info("Loading file '" + name + "'");

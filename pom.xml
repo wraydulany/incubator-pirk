@@ -95,16 +95,16 @@
 		<slf4j.version>1.7.21</slf4j.version>
 		<log4j2.version>2.6.2</log4j2.version>
 		<junit.version>4.12</junit.version>
-		<log4j.configuration>log4j2.properties</log4j.configuration>
+		<log4j.configuration>log4j2.xml</log4j.configuration>
+		<hadoop.version>2.7.2</hadoop.version>
+		<apache-commons.version>3.3</apache-commons.version>
+		<elasticsearch.version>2.3.3</elasticsearch.version>
+		<pirk.forkCount>1C</pirk.forkCount>
+		<pirk.reuseForks>true</pirk.reuseForks>
+		<jackson.version>2.8.1</jackson.version>
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -114,7 +114,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
-			<version>3.3</version>
+			<version>${apache-commons.version}</version>
 		</dependency>
 
 		<dependency>
@@ -132,37 +132,73 @@
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.3</version>
+			<version>${apache-commons.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
-			<version>2.7.2</version>
+			<version>${hadoop.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-mapreduce-client-core</artifactId>
-			<version>2.7.2</version>
+			<version>${hadoop.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-client</artifactId>
-			<version>2.7.2</version>
+			<version>${hadoop.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-core_2.11</artifactId>
 			<version>1.6.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch-hadoop</artifactId>
-			<version>2.1.2</version>
+			<version>${elasticsearch.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-net</artifactId>
@@ -177,8 +213,12 @@
 					<artifactId>slf4j-log4j12</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>log4j-over-slf4j</artifactId>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.storm</groupId>
+					<artifactId>storm-core</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -216,6 +256,19 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<version>2.6.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+
+		<!-- Jackson dependency -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 
 	</dependencies>
@@ -355,6 +408,8 @@
 						<systemPropertyVariables>
 							<log4j.configuration>${log4j.configuration}</log4j.configuration>
 						</systemPropertyVariables>
+						<forkCount>${pirk.forkCount}</forkCount>
+						<reuseForks>${pirk.reuseForks}</reuseForks>
 					</configuration>
 					<dependencies>
 						<dependency>
@@ -404,6 +459,7 @@
 							<configuration>
 								<shadedArtifactAttached>true</shadedArtifactAttached>
 								<shadedClassifierName>exe</shadedClassifierName>
+								<minimizeJar>true</minimizeJar>
 								<transformers>
 									<transformer
 											implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -508,6 +564,17 @@
 						</execution>
 					</executions>
 				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>2.10.4</version>
+					<configuration>
+						<javadocDirectory>docs</javadocDirectory>
+						<testJavadocDirectory>docs/test</testJavadocDirectory>
+						<javadocVersion>1.8</javadocVersion>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -520,7 +587,7 @@
 			be explicitly provided. -->
 			<id>integration-tests</id>
 			<build>
-				<plugins>
+			<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
