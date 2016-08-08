@@ -33,7 +33,9 @@ import java.util.Map;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.json.simple.JSONObject;
+//import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class HDFS
 {
   private static final Logger logger = LoggerFactory.getLogger(HDFS.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   public static void writeFile(Collection<String> elements, FileSystem fs, String path, boolean deleteOnExit)
   {
@@ -74,7 +77,8 @@ public class HDFS
     }
   }
 
-  public static void writeFile(List<JSONObject> elements, FileSystem fs, String path, boolean deleteOnExit)
+  //todo write unit test
+  public static void writeFile(List<JsonNode> elements, FileSystem fs, String path, boolean deleteOnExit)
   {
     Path filePath = new Path(path);
 
@@ -84,9 +88,10 @@ public class HDFS
       BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fs.create(filePath, true)));
 
       // write each element on a new line
-      for (JSONObject element : elements)
+      //todo test for one per line-ness
+      for (JsonNode element : elements)
       {
-        bw.write(element.toString());
+        bw.write(mapper.writeValueAsString(element));
         bw.newLine();
       }
       bw.close();
