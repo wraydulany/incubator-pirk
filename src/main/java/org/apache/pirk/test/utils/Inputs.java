@@ -44,7 +44,10 @@ import org.apache.pirk.test.distributed.DistributedTestDriver;
 import org.apache.pirk.utils.HDFS;
 import org.apache.pirk.utils.PIRException;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -57,6 +60,7 @@ import org.w3c.dom.Element;
 public class Inputs
 {
   private static final Logger logger = LoggerFactory.getLogger(Inputs.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   // Test data schema fields
   public static final String DATE = "date";
@@ -126,110 +130,119 @@ public class Inputs
    * Creates PIR JSON input
    */
   @SuppressWarnings("unchecked")
-  public static ArrayList<JSONObject> createJSONDataElements()
+  public static ArrayList<JsonNode> createJSONDataElements()
   {
-    ArrayList<JSONObject> dataElementsJSON = new ArrayList<>();
+    ArrayList<JsonNode> dataElementsJSON = new ArrayList<>();
 
-    JSONObject jsonObj1 = new JSONObject();
-    jsonObj1.put(DATE, "2016-02-20T23:29:05.000Z");
-    jsonObj1.put(QNAME, "a.b.c.com"); // hits on domain selector
-    jsonObj1.put(SRCIP, "55.55.55.55"); // hits on IP selector
-    jsonObj1.put(DSTIP, "1.2.3.6");
-    jsonObj1.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj1.put(RCODE, 0);
-    jsonObj1.put(IPS, new ArrayList<>(Arrays.asList("10.20.30.40", "10.20.30.60")));
+    TestData data1 = new TestData(
+      "2016-02-20T23:29:05.000Z",
+      "a.b.c.com", // hits on domain selector
+      "55.55.55.55", // hits on IP selector
+      "1.2.3.6",
+      new ArrayList(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Arrays.asList("10.20.30.40", "10.20.30.60")));
 
+    JsonNode jsonObj1 = mapper.valueToTree(data1);
     dataElementsJSON.add(jsonObj1);
 
-    JSONObject jsonObj2 = new JSONObject();
-    jsonObj2.put(DATE, "2016-02-20T23:29:06.000Z");
-    jsonObj2.put(QNAME, "d.e.com");
-    jsonObj2.put(SRCIP, "127.128.129.130");
-    jsonObj2.put(DSTIP, "1.2.3.4");
-    jsonObj2.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj2.put(RCODE, 0);
-    jsonObj2.put(IPS, new ArrayList<>(Collections.singletonList("5.6.7.8")));
+    TestData data2 = new TestData(
+      "2016-02-20T23:29:06.000Z",
+      "d.e.com",
+      "127.128.129.130",
+      "1.2.3.4",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("5.6.7.8")));
 
+    JsonNode jsonObj2 = mapper.valueToTree(data2);
     dataElementsJSON.add(jsonObj2);
 
-    JSONObject jsonObj3 = new JSONObject();
-    jsonObj3.put(DATE, "2016-02-20T23:29:07.000Z");
-    jsonObj3.put(QNAME, "d.e.com");
-    jsonObj3.put(SRCIP, "131.132.133.134");
-    jsonObj3.put(DSTIP, "9.10.11.12");
-    jsonObj3.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj3.put(RCODE, 0);
-    jsonObj3.put(IPS, new ArrayList<>(Collections.singletonList("13.14.15.16")));
+    TestData data3 = new TestData(
+      "2016-02-20T23:29:07.000Z",
+      "d.e.com",
+      "131.132.133.134",
+      "9.10.11.12",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("13.14.15.16")));
 
+    JsonNode jsonObj3 = mapper.valueToTree(data3);
     dataElementsJSON.add(jsonObj3);
 
-    JSONObject jsonObj4 = new JSONObject();
-    jsonObj4.put(DATE, "2016-02-20T23:29:08.000Z");
-    jsonObj4.put(QNAME, "d.e.com");
-    jsonObj4.put(SRCIP, "135.136.137.138");
-    jsonObj4.put(DSTIP, "17.18.19.20");
-    jsonObj4.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj4.put(RCODE, 3);
-    jsonObj4.put(IPS, new ArrayList<>(Collections.singletonList("21.22.23.24")));
+    TestData data4 = new TestData(
+      "2016-02-20T23:29:08.000Z",
+      "d.e.com",
+      "135.136.137.138",
+      "17.18.19.20",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      3,
+      new ArrayList<>(Collections.singletonList("21.22.23.24")));
 
+    JsonNode jsonObj4 = mapper.valueToTree(data4);
     dataElementsJSON.add(jsonObj4);
 
-    JSONObject jsonObj5 = new JSONObject();
-    jsonObj5.put(DATE, "2016-02-20T23:29:09.000Z");
-    jsonObj5.put(QNAME, "d.e.com");
-    jsonObj5.put(SRCIP, "139.140.141.142");
-    jsonObj5.put(DSTIP, "25.26.27.28");
-    jsonObj5.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj5.put(RCODE, 0);
-    jsonObj5.put(IPS, new ArrayList<>(Collections.singletonList("5.6.7.8")));
+    TestData data5 = new TestData(
+      "2016-02-20T23:29:09.000Z",
+      "d.e.com",
+      "139.140.141.142",
+      "25.26.27.28",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("5.6.7.8")));
 
+    JsonNode jsonObj5 = mapper.valueToTree(data5);
     dataElementsJSON.add(jsonObj5);
 
-    JSONObject jsonObj6 = new JSONObject();
-    jsonObj6.put(DATE, "2016-02-20T23:29:10.000Z");
-    jsonObj6.put(QNAME, "d.e.com");
-    jsonObj6.put(SRCIP, "143.144.145.146");
-    jsonObj6.put(DSTIP, "33.34.35.36");
-    jsonObj6.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj6.put(RCODE, 0);
-    jsonObj6.put(IPS, new ArrayList<>(Collections.singletonList("5.6.7.8")));
+    TestData data6 = new TestData(
+      "2016-02-20T23:29:10.000Z",
+      "d.e.com",
+      "143.144.145.146",
+      "33.34.35.36",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("5.6.7.8")));
 
+    JsonNode jsonObj6 = mapper.valueToTree(data6);
     dataElementsJSON.add(jsonObj6);
 
-    JSONObject jsonObj7 = new JSONObject();
-    jsonObj7.put(DATE, "2016-02-20T23:29:11.000Z");
-    jsonObj7.put(QNAME, "something.else");
-    jsonObj7.put(SRCIP, "1.1.1.1");
-    jsonObj7.put(DSTIP, "2.2.2.2");
-    jsonObj7.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj7.put(RCODE, 0);
-    jsonObj7.put(IPS, new ArrayList<>(Collections.singletonList("3.3.3.3")));
+    TestData data7 = new TestData(
+      "2016-02-20T23:29:11.000Z",
+      "something.else",
+      "1.1.1.1",
+      "2.2.2.2",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("3.3.3.3")));
 
+    JsonNode jsonObj7 = mapper.valueToTree(data7);
     dataElementsJSON.add(jsonObj7);
 
     // This should never be returned - doesn't hit on any domain selectors
     // resolution ip on stoplist
-    JSONObject jsonObj8 = new JSONObject();
-    jsonObj8.put(DATE, "2016-02-20T23:29:12.000Z");
-    jsonObj8.put(QNAME, "something.else2");
-    jsonObj8.put(SRCIP, "5.6.7.8");
-    jsonObj8.put(DSTIP, "2.2.2.22");
-    jsonObj8.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj8.put(RCODE, 0);
-    jsonObj8.put(IPS, new ArrayList<>(Collections.singletonList("3.3.3.132")));
+    TestData data8 = new TestData(
+      "2016-02-20T23:29:12.000Z",
+      "something.else2",
+      "5.6.7.8",
+      "2.2.2.22",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("3.3.3.132")));
 
+    JsonNode jsonObj8 = mapper.valueToTree(data8);
     dataElementsJSON.add(jsonObj8);
 
     // This should never be returned in distributed case -- domain and resolution ip on stoplist
-    JSONObject jsonObj9 = new JSONObject();
-    jsonObj9.put(DATE, "2016-02-20T23:29:13.000Z");
-    jsonObj9.put(QNAME, "something.else.on.stoplist");
-    jsonObj9.put(SRCIP, "55.55.55.55");
-    jsonObj9.put(DSTIP, "2.2.2.232");
-    jsonObj9.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj9.put(RCODE, 0);
-    jsonObj9.put(IPS, new ArrayList<>(Collections.singletonList("3.3.3.132")));
+    TestData data9 = new TestData(
+      "2016-02-20T23:29:13.000Z",
+      "something.else.on.stoplist",
+      "55.55.55.55",
+      "2.2.2.232",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      0,
+      new ArrayList<>(Collections.singletonList("3.3.3.132")));
 
+    JsonNode jsonObj9 = mapper.valueToTree(data9);
     dataElementsJSON.add(jsonObj9);
 
     return dataElementsJSON;
@@ -239,19 +252,20 @@ public class Inputs
    * Creates an ArrayList of JSONObjects with RCODE value of 3
    */
   @SuppressWarnings("unchecked")
-  public static ArrayList<JSONObject> getRcode3JSONDataElements()
+  public static ArrayList<JsonNode> getRcode3JSONDataElements()
   {
-    ArrayList<JSONObject> dataElementsJSON = new ArrayList<>();
+    ArrayList<JsonNode> dataElementsJSON = new ArrayList<>();
 
-    JSONObject jsonObj4 = new JSONObject();
-    jsonObj4.put(DATE, "2016-02-20T23:29:08.000Z");
-    jsonObj4.put(QNAME, "d.e.com");
-    jsonObj4.put(SRCIP, "135.136.137.138");
-    jsonObj4.put(DSTIP, "17.18.19.20");
-    jsonObj4.put(QTYPE, new ArrayList<>(Collections.singletonList((short) 1)));
-    jsonObj4.put(RCODE, 3);
-    jsonObj4.put(IPS, new ArrayList<>(Collections.singletonList("21.22.23.24")));
+    TestData data4 = new TestData(
+      "2016-02-20T23:29:08.000Z",
+      "d.e.com",
+      "135.136.137.138",
+      "17.18.19.20",
+      new ArrayList<>(Collections.singletonList((short) 1)),
+      3,
+      new ArrayList<>(Collections.singletonList("21.22.23.24")));
 
+    JsonNode jsonObj4 = mapper.valueToTree(data4);
     dataElementsJSON.add(jsonObj4);
 
     return dataElementsJSON;
@@ -261,12 +275,12 @@ public class Inputs
    * Creates PIR JSON input and writes to hdfs
    */
   @SuppressWarnings("unchecked")
-  public static ArrayList<JSONObject> createPIRJSONInput(FileSystem fs)
+  public static ArrayList<JsonNode> createPIRJSONInput(FileSystem fs)
   {
     String inputJSONFile = SystemConfiguration.getProperty(DistributedTestDriver.JSON_PIR_INPUT_FILE_PROPERTY);
     logger.info("PIR JSON input being created at " + inputJSONFile);
 
-    ArrayList<JSONObject> dataElementsJSON = createJSONDataElements();
+    ArrayList<JsonNode> dataElementsJSON = createJSONDataElements();
 
     HDFS.writeFile(dataElementsJSON, fs, inputJSONFile, true);
     logger.info("PIR JSON input successfully created!");
