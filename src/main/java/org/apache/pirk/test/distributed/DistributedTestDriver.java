@@ -20,6 +20,7 @@ package org.apache.pirk.test.distributed;
 
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.pirk.schema.data.DataSchemaLoader;
@@ -28,7 +29,6 @@ import org.apache.pirk.schema.query.filter.StopListFilter;
 import org.apache.pirk.test.distributed.testsuite.DistTestSuite;
 import org.apache.pirk.test.utils.Inputs;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +69,7 @@ public class DistributedTestDriver
     logger.info("jarFile = " + jarFile);
     SystemConfiguration.setProperty("jarFile", jarFile);
 
-    ArrayList<JSONObject> dataElements = initialize(fs);
+    ArrayList<JsonNode> dataElements = initialize(fs);
 
     // Pull off the properties and reset upon completion
     String dataSchemasProp = SystemConfiguration.getProperty("data.schemas", "none");
@@ -85,9 +85,9 @@ public class DistributedTestDriver
   /**
    * Create all inputs
    */
-  public static ArrayList<JSONObject> initialize(FileSystem fs) throws Exception
+  public static ArrayList<JsonNode> initialize(FileSystem fs) throws Exception
   {
-    ArrayList<JSONObject> dataElements = Inputs.createPIRJSONInput(fs);
+    ArrayList<JsonNode> dataElements = Inputs.createPIRJSONInput(fs);
 
     String localStopListFile = Inputs.createPIRStopList(fs, true);
     SystemConfiguration.setProperty("pir.stopListFile", localStopListFile);
@@ -100,7 +100,7 @@ public class DistributedTestDriver
   /**
    * Execute Tests
    */
-  public static void test(FileSystem fs, DistributedTestCLI cli, ArrayList<JSONObject> pirDataElements) throws Exception
+  public static void test(FileSystem fs, DistributedTestCLI cli, ArrayList<JsonNode> pirDataElements) throws Exception
   {
     if (cli.run("1:J"))
     {
