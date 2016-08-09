@@ -172,7 +172,7 @@ public class Responder
     int rowCounter = rowColumnCounters.get(rowIndex);
     BigInteger rowQuery = query.getQueryElement(rowIndex);
 
-    logger.info("hitValPartitions.size() = " + hitValPartitions.size() + " rowIndex = " + rowIndex + " rowCounter = " + rowCounter + " rowQuery = "
+    logger.debug("hitValPartitions.size() = " + hitValPartitions.size() + " rowIndex = " + rowIndex + " rowCounter = " + rowCounter + " rowQuery = "
         + rowQuery.toString() + " pirWLQuery.getNSquared() = " + query.getNSquared().toString());
 
     // Update the associated column values
@@ -208,14 +208,14 @@ public class Responder
 
     // Update the rowCounter (next free column position) for the selector
     rowColumnCounters.set(rowIndex, (rowCounter + hitValPartitions.size()));
-    logger.debug("new rowIndex = " + rowColumnCounters.get(rowIndex));
+    logger.info("new rowIndex = " + rowColumnCounters.get(rowIndex));
   }
 
   // Sets the elements of the response object that will be passed back to the
   // querier for decryption
   public void setResponseElements()
   {
-    logger.debug("numResponseElements = " + columns.size());
+    logger.info("numResponseElements = " + columns.size());
     // for(int key: columns.keySet())
     // {
     // logger.debug("key = " + key + " column = " + columns.get(key));
