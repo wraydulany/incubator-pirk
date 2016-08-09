@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.pirk.encryption.Paillier;
 import org.apache.pirk.querier.wideskies.Querier;
 import org.apache.pirk.querier.wideskies.QuerierConst;
@@ -41,7 +42,6 @@ import org.apache.pirk.schema.response.QueryResponseJSON;
 import org.apache.pirk.serialization.LocalFileSystemStore;
 import org.apache.pirk.utils.PIRException;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class StandaloneQuery
   String testQuerySchemaName = "testQuerySchema";
 
   // Base method to perform the query
-  public static ArrayList<QueryResponseJSON> performStandaloneQuery(ArrayList<JSONObject> dataElements, String queryType, ArrayList<String> selectors,
+  public static ArrayList<QueryResponseJSON> performStandaloneQuery(ArrayList<JsonNode> dataElements, String queryType, ArrayList<String> selectors,
       int numThreads, boolean testFalsePositive) throws IOException, InterruptedException, PIRException
   {
     logger.info("Performing watchlisting: ");
@@ -117,7 +117,7 @@ public class StandaloneQuery
     Query query = storage.recall(fileQuery, Query.class);
     Responder pirResponder = new Responder(query);
     logger.info("Query and Responder elements constructed");
-    for (JSONObject jsonData : dataElements)
+    for (JsonNode jsonData : dataElements)
     {
       String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, jsonData);
       logger.info("selector = " + selector + " numDataElements = " + jsonData.size());
