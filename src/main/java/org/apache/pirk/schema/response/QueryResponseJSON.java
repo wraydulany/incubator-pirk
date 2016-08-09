@@ -112,7 +112,7 @@ public class QueryResponseJSON implements Serializable
     }
   }
 
-  public ObjectNode getJSONObject()
+  public ObjectNode getJsonNode()
   {
     return jsonNode;
   }
@@ -285,7 +285,7 @@ public class QueryResponseJSON implements Serializable
     {
       Set<String> thisKeySet = StringUtils.jsonGetKeys(jsonNode);
       Set<String> otherKeySet = StringUtils.jsonGetKeys(other.jsonNode);
-      
+
       if (!thisKeySet.equals(otherKeySet))
       {
         return false;
