@@ -25,6 +25,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pirk.encryption.ModPowAbstraction;
 import org.apache.pirk.query.wideskies.Query;
 import org.apache.pirk.query.wideskies.QueryInfo;
@@ -35,8 +37,6 @@ import org.apache.pirk.schema.query.QuerySchemaRegistry;
 import org.apache.pirk.serialization.LocalFileSystemStore;
 import org.apache.pirk.utils.KeyedHash;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 public class Responder
 {
   private static final Logger logger = LoggerFactory.getLogger(Responder.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   private Query query = null;
   private QueryInfo queryInfo = null;
@@ -117,21 +118,15 @@ public class Responder
     try
     {
       BufferedReader br = new BufferedReader(new FileReader(inputData));
-
-      String line;
-      JSONParser jsonParser = new JSONParser();
-      while ((line = br.readLine()) != null)
-      {
-        logger.info("line = " + line);
-        JSONObject jsonData = (JSONObject) jsonParser.parse(line);
-
-        logger.info("jsonData = " + jsonData.toJSONString());
-
-        String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, jsonData);
-        addDataElement(selector, jsonData);
-      }
+      JsonNode elements = mapper.readTree(br);
       br.close();
-    } catch (Exception e)
+      for(JsonNode element: elements){
+        logger.info("jsonData = " + element.toString());
+        String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, element);
+        addDataElement(selector, element);
+      }
+
+    }catch (Exception e)
     {
       e.printStackTrace();
     }
@@ -166,7 +161,7 @@ public class Responder
    * Y_{i+c_{H_k(T)}} = (Y_{i+c_{H_k(T)}} * ((E_T)^{D_i} mod N^2)) mod N^2 ++c_{H_k(T)}
    * 
    */
-  public void addDataElement(String selector, JSONObject jsonData) throws Exception
+  public void addDataElement(String selector, JsonNode jsonData) throws Exception
   {
     // Extract the data bits based on the query type
     // Partition by the given partitionSize
