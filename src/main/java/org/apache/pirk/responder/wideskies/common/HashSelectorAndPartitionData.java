@@ -21,6 +21,7 @@ package org.apache.pirk.responder.wideskies.common;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.pirk.inputformat.hadoop.BytesArrayWritable;
 import org.apache.pirk.query.wideskies.QueryInfo;
@@ -28,7 +29,6 @@ import org.apache.pirk.query.wideskies.QueryUtils;
 import org.apache.pirk.schema.data.DataSchema;
 import org.apache.pirk.schema.query.QuerySchema;
 import org.apache.pirk.utils.KeyedHash;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,18 +81,18 @@ public class HashSelectorAndPartitionData
     return returnTuple;
   }
 
-  public static Tuple2<Integer,ArrayList<BigInteger>> hashSelectorAndFormPartitions(JSONObject json, QueryInfo queryInfo, QuerySchema qSchema) throws Exception
+  public static Tuple2<Integer,ArrayList<BigInteger>> hashSelectorAndFormPartitions(JsonNode jsonNode, QueryInfo queryInfo, QuerySchema qSchema) throws Exception
   {
     Tuple2<Integer,ArrayList<BigInteger>> returnTuple;
 
     // Pull the selector based on the query type
-    String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, json);
+    String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, jsonNode);
     int hash = KeyedHash.hash(queryInfo.getHashKey(), queryInfo.getHashBitSize(), selector);
     logger.debug("selector = " + selector + " hash = " + hash);
 
     // Extract the data bits based on the query type
     // Partition by the given partitionSize
-    ArrayList<BigInteger> hitValPartitions = QueryUtils.partitionDataElement(qSchema, json, queryInfo.getEmbedSelector());
+    ArrayList<BigInteger> hitValPartitions = QueryUtils.partitionDataElement(qSchema, jsonNode, queryInfo.getEmbedSelector());
 
     returnTuple = new Tuple2<>(hash, hitValPartitions);
 
