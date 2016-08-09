@@ -194,14 +194,9 @@ public class QueryResponseJSON implements Serializable
             jsonNode.putArray(key);
           }
 
-          try
-          {
-            list = (ArrayList<Object>) mapper.readValue(jsonNode.get(key).toString(), new TypeReference<ArrayList<Object>>(){});
-          } catch (IOException e)
-          {
-            logger.error("Unable to parse JSON node of array of objects.");
-            e.printStackTrace();
-          }
+          ArrayList<String> templist = StringUtils.jsonNodeArrayToArrayList(jsonNode.get(key));
+          list.addAll(templist);
+
 
           if (!list.contains(val))
           {

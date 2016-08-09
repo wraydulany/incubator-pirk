@@ -224,12 +224,57 @@ public class StringUtils
    */
   public static ArrayList<String> jsonNodeArrayToArrayList(JsonNode arrNode)
   {
-    ArrayList<String> retlist = new ArrayList<>();
-    for(JsonNode node: arrNode)
+    /*
+    try
     {
-      retlist.add(node.toString());
+      return mapper.readValue(arrNode.toString(), new TypeReference<ArrayList<String>>(){});
+    } catch (IOException e)
+    {
+      e.printStackTrace();
+    } finally
+    {
+      return new ArrayList<>();
+    }
+    */
+    ArrayList<String> retlist = new ArrayList<>();
+    Iterator<JsonNode> arrayiter = arrNode.elements();
+    while(arrayiter.hasNext())
+    {
+      JsonNode node = arrayiter.next();
+      retlist.add(jacksonSimpleTypeHelper(node).toString());
     }
     return retlist;
+  }
+
+  public static Object jacksonSimpleTypeHelper(JsonNode node)
+  {
+    switch(node.getNodeType()){
+
+      case ARRAY:
+      case OBJECT:
+      case POJO:
+        return node.toString();
+      case BINARY:
+        try
+        {
+          return node.binaryValue();
+        } catch (IOException e)
+        {
+          e.printStackTrace();
+        }
+        return null;
+      case BOOLEAN:
+        return node.booleanValue();
+      case MISSING:
+      case NULL:
+        return null;
+      case NUMBER:
+        return node.numberValue();
+      case STRING:
+        return node.textValue();
+      default:
+        return null;
+    }
   }
 
   /**
