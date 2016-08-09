@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.pirk.schema.data.DataSchema;
 import org.apache.pirk.schema.data.DataSchemaRegistry;
@@ -55,7 +56,7 @@ public class QueryParserUtilsTest
   @BeforeClass
   public static void setup() throws Exception
   {
-    ArrayList<JSONObject> dataElementsJSON = Inputs.createJSONDataElements();
+    ArrayList<JsonNode> dataElementsJSON = Inputs.createJSONDataElements();
 
     // Reset the schema properties and registries
     DataSchemaRegistry.clearRegistry();
@@ -71,9 +72,9 @@ public class QueryParserUtilsTest
     // "{\"qname\":\"a.b.c.com\",\"date\":\"2016-02-20T23:29:05.000Z\",\"qtype\":[\"1\"]"
     // + ",\"rcode\":\"0\",\"src_ip\":\"55.55.55.55\",\"dest_ip\":\"1.2.3.6\"" + ",\"ip\":[\"10.20.30.40\",\"10.20.30.60\"]}");
     //
-    doc = StringUtils.jsonStringToMapWritableWithArrayWritable(dataElementsJSON.get(0).toJSONString(), dSchema);
-    docWAW = StringUtils.jsonStringToMapWritableWithWritableArrayWritable(dataElementsJSON.get(0).toJSONString(), dSchema);
-    docMap = StringUtils.jsonStringToMap(dataElementsJSON.get(0).toJSONString(), dSchema);
+    doc = StringUtils.jsonStringToMapWritableWithArrayWritable(dataElementsJSON.get(0), dSchema);
+    docWAW = StringUtils.jsonStringToMapWritableWithWritableArrayWritable(dataElementsJSON.get(0), dSchema);
+    docMap = StringUtils.jsonStringToMap(dataElementsJSON.get(0), dSchema);
   }
 
   @AfterClass
