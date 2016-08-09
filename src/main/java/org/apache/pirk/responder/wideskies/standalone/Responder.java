@@ -172,7 +172,7 @@ public class Responder
     int rowCounter = rowColumnCounters.get(rowIndex);
     BigInteger rowQuery = query.getQueryElement(rowIndex);
 
-    logger.debug("hitValPartitions.size() = " + hitValPartitions.size() + " rowIndex = " + rowIndex + " rowCounter = " + rowCounter + " rowQuery = "
+    logger.info("hitValPartitions.size() = " + hitValPartitions.size() + " rowIndex = " + rowIndex + " rowCounter = " + rowCounter + " rowQuery = "
         + rowQuery.toString() + " pirWLQuery.getNSquared() = " + query.getNSquared().toString());
 
     // Update the associated column values

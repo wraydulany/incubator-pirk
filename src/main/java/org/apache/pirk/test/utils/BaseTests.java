@@ -82,10 +82,12 @@ public class BaseTests
     ArrayList<QueryResponseJSON> results;
     if (isDistributed)
     {
+      logger.info("I am a distributed test.");
       results = DistTestSuite.performQuery(Inputs.DNS_HOSTNAME_QUERY, selectorsDomain, fs, isSpark, numThreads);
     }
     else
     {
+      logger.info("I am a standalone test.");
       results = StandaloneQuery.performStandaloneQuery(dataElements, Inputs.DNS_HOSTNAME_QUERY, selectorsDomain, numThreads, testFalsePositive);
       if (!testFalsePositive)
       {
@@ -636,9 +638,15 @@ public class BaseTests
 
   private static void printResultList(ArrayList<QueryResponseJSON> list)
   {
+    Integer i = 0;
     for (QueryResponseJSON obj : list)
     {
+      i = i + 1;
       logger.info(obj.toString());
+    }
+    if(i == 0)
+    {
+      logger.info("[No Results]");
     }
   }
 }

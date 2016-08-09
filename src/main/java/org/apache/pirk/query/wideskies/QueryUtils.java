@@ -347,7 +347,7 @@ public class QueryUtils
     }
     else
     {
-      selector = dataMap.get(fieldName).textValue();
+      selector = StringUtils.jacksonSimpleTypeHelper(dataMap.get(fieldName)).toString();
     }
     return selector;
   }
