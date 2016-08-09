@@ -21,6 +21,7 @@ package org.apache.pirk.test.distributed.testsuite;
 import java.io.File;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
@@ -43,7 +44,6 @@ import org.apache.pirk.test.utils.Inputs;
 import org.apache.pirk.test.utils.TestUtils;
 import org.apache.pirk.utils.SystemConfiguration;
 import org.apache.spark.launcher.SparkLauncher;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public class DistTestSuite
 
   // This method also tests all non-query specific configuration options/properties
   // for the MapReduce version of PIR
-  public static void testJSONInputMR(FileSystem fs, ArrayList<JSONObject> dataElements) throws Exception
+  public static void testJSONInputMR(FileSystem fs, ArrayList<JsonNode> dataElements) throws Exception
   {
     logger.info("Starting testJSONInputMR");
 
@@ -150,7 +150,7 @@ public class DistTestSuite
     logger.info("Completed testJSONInputMR");
   }
 
-  public static void testESInputMR(FileSystem fs, ArrayList<JSONObject> dataElements) throws Exception
+  public static void testESInputMR(FileSystem fs, ArrayList<JsonNode> dataElements) throws Exception
   {
     logger.info("Starting testESInputMR");
 
@@ -189,7 +189,7 @@ public class DistTestSuite
     logger.info("Completed testESInputMR");
   }
 
-  public static void testJSONInputSpark(FileSystem fs, ArrayList<JSONObject> dataElements) throws Exception
+  public static void testJSONInputSpark(FileSystem fs, ArrayList<JsonNode> dataElements) throws Exception
   {
     logger.info("Starting testJSONInputSpark");
 
@@ -281,7 +281,7 @@ public class DistTestSuite
     logger.info("Completed testJSONInputSpark");
   }
 
-  public static void testESInputSpark(FileSystem fs, ArrayList<JSONObject> dataElements) throws Exception
+  public static void testESInputSpark(FileSystem fs, ArrayList<JsonNode> dataElements) throws Exception
   {
     logger.info("Starting testESInputSpark");
 
