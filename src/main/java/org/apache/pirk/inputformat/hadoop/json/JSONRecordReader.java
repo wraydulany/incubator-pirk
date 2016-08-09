@@ -20,6 +20,8 @@ package org.apache.pirk.inputformat.hadoop.json;
 
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.fs.ChecksumException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.MapWritable;
@@ -35,9 +37,7 @@ import org.apache.pirk.schema.data.DataSchemaRegistry;
 import org.apache.pirk.utils.QueryParserUtils;
 import org.apache.pirk.utils.StringUtils;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
 public class JSONRecordReader extends RecordReader<Text,MapWritable>
 {
   private static final Logger logger = LoggerFactory.getLogger(JSONRecordReader.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   private LineRecordReader lineReader = null;
   private Text key = null;
   private MapWritable value = null;
-  private JSONParser jsonParser = null;
   private String queryString = null;
   private DataSchema dataSchema = null;
 
@@ -61,7 +61,6 @@ public class JSONRecordReader extends RecordReader<Text,MapWritable>
   {
     key = new Text();
     value = new MapWritable();
-    jsonParser = new JSONParser();
 
     lineReader = new LineRecordReader();
     lineReader.initialize(inputSplit, context);
@@ -157,7 +156,7 @@ public class JSONRecordReader extends RecordReader<Text,MapWritable>
       // Check to see if the record satisfies the query
       return QueryParserUtils.checkRecord(queryString, value, dataSchema);
 
-    } catch (ParseException e)
+    } catch (java.io.IOException e)
     {
       logger.warn("Could not json-decode string: " + line, e);
       return false;
@@ -168,24 +167,24 @@ public class JSONRecordReader extends RecordReader<Text,MapWritable>
     }
   }
 
-  public void toMapWritable(Text line) throws ParseException
+  public void toMapWritable(Text line) throws java.io.IOException
   {
-    JSONObject jsonObj = (JSONObject) jsonParser.parse(line.toString());
-    for (Object key : jsonObj.keySet())
+    JsonNode jsonNode = mapper.readTree(line.toString());
+    for (String key : StringUtils.jsonGetKeys(jsonNode))
     {
-      Text mapKey = new Text(key.toString());
+      Text mapKey = new Text(key);
       Text mapValue = new Text();
-      if (jsonObj.get(key) != null)
+      if (jsonNode.hasNonNull(key))
       {
-        if (dataSchema.isArrayElement(key.toString()))
+        if (dataSchema.isArrayElement(key))
         {
-          String[] elements = StringUtils.jsonArrayStringToList(jsonObj.get(key).toString());
+          String[] elements = StringUtils.jsonNodeArrayToList(jsonNode.get(key));
           TextArrayWritable aw = new TextArrayWritable(elements);
           value.put(mapKey, aw);
         }
         else
         {
-          mapValue.set(jsonObj.get(key).toString());
+          mapValue.set(jsonNode.get(key).toString());
           value.put(mapKey, mapValue);
         }
       }
