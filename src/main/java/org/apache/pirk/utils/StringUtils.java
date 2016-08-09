@@ -19,10 +19,7 @@
 package org.apache.pirk.utils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -241,5 +238,16 @@ public class StringUtils
   public static String[] jsonNodeArrayToList(JsonNode jsonNode)
   {
     return (String[]) jsonNodeArrayToArrayList(jsonNode).toArray();
+  }
+
+  public static Set<String> jsonGetKeys(JsonNode jsonNode)
+  {
+    Set<String> keySet = new HashSet<>();
+    Iterator<String> fieldnamesiter = jsonNode.fieldNames();
+    while(fieldnamesiter.hasNext())
+    {
+      keySet.add(fieldnamesiter.next());
+    }
+    return keySet;
   }
 }
