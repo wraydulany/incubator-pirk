@@ -35,6 +35,7 @@ import org.apache.pirk.schema.data.DataSchemaRegistry;
 import org.apache.pirk.schema.query.QuerySchema;
 import org.apache.pirk.schema.query.QuerySchemaRegistry;
 
+import org.apache.pirk.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,19 +283,9 @@ public class QueryResponseJSON implements Serializable
     }
     else
     {
-      Set<String> thisKeySet = new HashSet<>();
-      Iterator<String> thisfielditer = jsonNode.fieldNames();
-      while(thisfielditer.hasNext())
-      {
-        thisKeySet.add(thisfielditer.next());
-      }
-
-      Set<String> otherKeySet = new HashSet<>();
-      Iterator<String> otherfielditer = other.jsonNode.fieldNames();
-      while(otherfielditer.hasNext())
-      {
-        thisKeySet.add(otherfielditer.next());
-      }
+      Set<String> thisKeySet = StringUtils.jsonGetKeys(jsonNode);
+      Set<String> otherKeySet = StringUtils.jsonGetKeys(other.jsonNode);
+      
       if (!thisKeySet.equals(otherKeySet))
       {
         return false;
