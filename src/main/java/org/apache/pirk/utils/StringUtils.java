@@ -20,12 +20,12 @@ package org.apache.pirk.utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.MapWritable;
@@ -34,11 +34,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.pirk.schema.data.DataSchema;
 import org.elasticsearch.hadoop.mr.WritableArrayWritable;
 
-/* To Replace: */
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-/* To use instead: */
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -84,235 +79,167 @@ public class StringUtils
   /**
    * Method to take an input json string and output a MapWritable with arrays as JSON formatted String objects
    */
-  public static MapWritable jsonStringToMapWritable(String jsonString)
+  public static MapWritable jsonStringToMapWritable(JsonNode jsonNode)
   {
-    MapWritable value = new MapWritable();
+    MapWritable mapWritable = new MapWritable();
+    Map<String,Object> map = new HashMap<>();
+
     try
     {
-      Map<Object, Object> tempMap = mapper.readValue(jsonString, Map.class);
-      for (Map.Entry<Object,Object> entry: tempMap.entrySet())
-      {
-        Text mapKey = new Text(entry.getKey().toString());
-        Text mapValue = new Text();
-        if (entry.getValue() != null){
-          mapValue.set(entry.getValue().toString());
-        }
-        value.put(mapKey, mapValue);
-      }
-
+      map = mapper.readValue(jsonNode.toString(), new TypeReference<Map<String,Object>>(){});
     } catch (IOException e)
     {
-      logger.error("Unable to parse JSON string: " + jsonString);
+      logger.error("Unable to parse JSON string into Map<String, Object>: " + jsonNode.toString());
       e.printStackTrace();
     }
-    return value;
+    Iterator it = map.entrySet().iterator();
+    while(it.hasNext())
+    {
+      Map.Entry<String,Object> pair = (Map.Entry) it.next();
+      if (jsonNode.get(pair.getKey()).isArray())
+      {
+        try
+        {
+          mapWritable.put(new Text(pair.getKey()), new Text(mapper.writeValueAsString(jsonNode.get(pair.getKey()))));
+        } catch (JsonProcessingException e)
+        {
+          logger.error("Unable to parse previously parsed json string.");
+          e.printStackTrace();
+        }
+      }
+      else
+      {
+        mapWritable.put(new Text(pair.getKey()), new Text(pair.getValue().toString()));
+      }
+
+    }
+
+    return mapWritable;
   }
 
   /**
    * Method to take an input json string and output a MapWritable with arrays as WritableArrayWritable objects
    */
-  public static MapWritable jsonStringToMapWritableWithWritableArrayWritable(String jsonString, DataSchema dataSchema)
+  public static MapWritable jsonStringToMapWritableWithWritableArrayWritable(JsonNode jsonNode, DataSchema dataSchema)
   {
-    //TODO jsonStringToMapWritableWithWritableArrayWritable
-    MapWritable value = new MapWritable();
-    JSONParser jsonParser = new JSONParser();
+    MapWritable mapWritable = new MapWritable();
+    Map<String, Object> map = jsonStringToMap(jsonNode, dataSchema);
 
-    try
+    Iterator it = map.entrySet().iterator();
+    while(it.hasNext())
     {
-      Map<Object, Object> tempMap = mapper.readValue(jsonString, Map.class);
-      JSONObject jsonObj = (JSONObject) jsonParser.parse(jsonString);
-      for (Map.Entry<Object,Object> entry: tempMap.entrySet())
-      //for (Object key : jsonObj.keySet())
+      Map.Entry<String,Object> pair = (Map.Entry) it.next();
+      Text mapKey = new Text(pair.getKey());
+      if (dataSchema.isArrayElement(pair.getKey()))
       {
-        Object key = entry.getKey();
-        Text mapKey = new Text(key.toString());
-        if (entry.getValue() != null)
-        {
-          logger.debug("key = " + key.toString());
-          if (dataSchema.isArrayElement((String) key))
-          {
-            WritableArrayWritable mapValue = StringUtils.jsonArrayStringToWritableArrayWritable(entry.getValue().toString());
-            value.put(mapKey, mapValue);
-          }
-          else
-          {
-            Text mapValue = new Text(jsonObj.get(key).toString());
-            value.put(mapKey, mapValue);
-          }
-        }
+        WritableArrayWritable mapValue = StringUtils.jsonNodeArrayToWritableArrayWritable(jsonNode.get(pair.getKey()));
+        mapWritable.put(mapKey, mapValue);
       }
-    } catch (ParseException e)
-    {
-      logger.warn("Could not json-decode string: " + jsonString, e);
-    } catch (NumberFormatException e)
-    {
-      logger.warn("Could not parse field into number: " + jsonString, e);
-    } catch (JsonParseException e)
-    {
-      e.printStackTrace();
-    } catch (JsonMappingException e)
-    {
-      e.printStackTrace();
-    } catch (IOException e)
-    {
-      e.printStackTrace();
+      else
+      {
+        Text mapValue = new Text(pair.getValue().toString());
+        mapWritable.put(mapKey, mapValue);
+      }
     }
 
-    return value;
+    return mapWritable;
   }
 
   /**
    * Method to take an input json string and output a MapWritable with arrays as WritableArrayWritable objects
    */
-  public static MapWritable jsonStringToMapWritableWithArrayWritable(String jsonString, DataSchema dataSchema)
+  @SuppressWarnings("unchecked")
+  public static MapWritable jsonStringToMapWritableWithArrayWritable(JsonNode jsonNode, DataSchema dataSchema)
   {
-    //TODO jsonStringToMapWritableWithArrayWritable
-    MapWritable value = new MapWritable();
-    JSONParser jsonParser = new JSONParser();
+    MapWritable mapWritable = new MapWritable();
+    Map<String, Object> map = jsonStringToMap(jsonNode, dataSchema);
 
-    try
+    Iterator it = map.entrySet().iterator();
+    while(it.hasNext())
     {
-      JSONObject jsonObj = (JSONObject) jsonParser.parse(jsonString);
-      for (Object key : jsonObj.keySet())
+      Map.Entry<String,Object> pair = (Map.Entry) it.next();
+      Text mapKey = new Text(pair.getKey());
+      if (dataSchema.isArrayElement(pair.getKey()))
       {
-        Text mapKey = new Text(key.toString());
-        if (jsonObj.get(key) != null)
-        {
-          logger.debug("key = " + key.toString());
-          if (dataSchema.isArrayElement((String) key))
-          {
-            ArrayWritable mapValue = StringUtils.jsonArrayStringToArrayWritable(jsonObj.get(key).toString());
-            value.put(mapKey, mapValue);
-          }
-          else
-          {
-            Text mapValue = new Text(jsonObj.get(key).toString());
-            value.put(mapKey, mapValue);
-          }
-        }
+        ArrayWritable mapValue = StringUtils.jsonNodeArrayToArrayWritable(jsonNode.get(pair.getKey()));
+        mapWritable.put(mapKey, mapValue);
       }
-    } catch (ParseException e)
-    {
-      logger.warn("Could not json-decode string: " + jsonString, e);
-    } catch (NumberFormatException e)
-    {
-      logger.warn("Could not parse field into number: " + jsonString, e);
+      else
+      {
+        Text mapValue = new Text(pair.getValue().toString());
+        mapWritable.put(mapKey, mapValue);
+      }
     }
 
-    return value;
+    return mapWritable;
   }
 
   /**
    * Method to take an input json string and output a Map<String, Object> with arrays as ArrayList<String> objects and single values as String objects
+   *
+   * Performs minor type validation against the dataSchema.
    */
-  public static Map<String,Object> jsonStringToMap(String jsonString, DataSchema dataSchema)
+  @SuppressWarnings("unchecked")
+  public static Map<String,Object> jsonStringToMap(JsonNode jsonNode, DataSchema dataSchema)
   {
-    //TODO jsonStringToMap
-    Map<String,Object> value = new HashMap<>();
-    ObjectMapper mapper = new ObjectMapper();
+    Map<String,Object> map = new HashMap<>();
 
     try
     {
-      value = mapper.readValue(jsonString, HashMap.class);
+      map = mapper.readValue(jsonNode.toString(), new TypeReference<Map<String,Object>>(){});
+
+      Iterator it = map.entrySet().iterator();
+      while(it.hasNext())
+      {
+        Map.Entry<String,Object> pair = (Map.Entry) it.next();
+        if (dataSchema.isArrayElement(pair.getKey()) && !jsonNode.get(pair.getKey()).isArray())
+        {
+          throw new IOException("Inappropriately parsed JSON array string.");
+        }
+      }
     } catch (IOException e)
     {
-      logger.error("Unable to parse JSON string into Map<String, Object>: " + jsonString);
+      logger.error("Unable to parse JSON string into Map<String, Object>: " + jsonNode.toString());
       e.printStackTrace();
     }
 
-    JSONParser jsonParser = new JSONParser();
-
-    try
-    {
-      JSONObject jsonObj = (JSONObject) jsonParser.parse(jsonString);
-      for (Object key : jsonObj.keySet())
-      {
-        String mapKey = key.toString();
-        if (jsonObj.get(key) != null)
-        {
-          if (dataSchema.isArrayElement((String) key))
-          {
-            ArrayList<String> mapValue = StringUtils.jsonArrayStringToArrayList(jsonObj.get(key).toString());
-            value.put(mapKey, mapValue);
-          }
-          else
-          {
-            value.put(mapKey, jsonObj.get(key).toString());
-          }
-        }
-      }
-    } catch (ParseException e)
-    {
-      logger.warn("Could not json-decode string: " + jsonString, e);
-    } catch (NumberFormatException e)
-    {
-      logger.warn("Could not parse field into number: " + jsonString, e);
-    }
-
-    return value;
+    return map;
   }
 
   /**
    * Method to take an input json array format string and output a WritableArrayWritable
    */
-  public static WritableArrayWritable jsonArrayStringToWritableArrayWritable(String jsonString)
+  public static WritableArrayWritable jsonNodeArrayToWritableArrayWritable(JsonNode jsonNode)
   {
-    //TODO jsonArrayStringToWritableArrayWritable
-    String modString = jsonString.replaceFirst("\\[", "");
-    modString = modString.replaceFirst("\\]", "");
-    modString = modString.replaceAll("\"", "");
-    String[] elements = modString.split("\\s*,\\s*");
-    logger.debug("elements = ");
-    for (String element : elements)
-    {
-      logger.debug("element: " + element);
-    }
-
-    return new WritableArrayWritable(elements);
+    return new WritableArrayWritable(jsonNodeArrayToList(jsonNode));
   }
 
   /**
    * Method to take an input json array format string and output an ArrayWritable
    */
-  public static ArrayWritable jsonArrayStringToArrayWritable(String jsonString)
+  public static ArrayWritable jsonNodeArrayToArrayWritable(JsonNode jsonNode)
   {
-    //TODO jsonArrayStringToArrayWritable
-    String modString = jsonString.replaceFirst("\\[", "");
-    modString = modString.replaceFirst("\\]", "");
-    modString = modString.replaceAll("\"", "");
-    String[] elements = modString.split("\\s*,\\s*");
-    logger.debug("elements = ");
-    for (String element : elements)
-    {
-      logger.debug("element: " + element);
-    }
-
-    return new ArrayWritable(elements);
+    return new ArrayWritable(jsonNodeArrayToList(jsonNode));
   }
 
   /**
    * Method to take an input json array format string and output an ArrayList
    */
-  public static ArrayList<String> jsonArrayStringToArrayList(String jsonString)
+  public static ArrayList<String> jsonNodeArrayToArrayList(JsonNode arrNode)
   {
-    //TODO jsonArrayStringToArrayList
-    String modString = jsonString.replaceFirst("\\[", "");
-    modString = modString.replaceFirst("\\]", "");
-    modString = modString.replaceAll("\"", "");
-    String[] elements = modString.split("\\s*,\\s*");
-
-    return new ArrayList<>(Arrays.asList(elements));
+    ArrayList<String> retlist = new ArrayList<>();
+    for(JsonNode node: arrNode)
+    {
+      retlist.add(node.toString());
+    }
+    return retlist;
   }
 
   /**
    * Method to take an input json array format string and output a String array
    */
-  public static String[] jsonArrayStringToList(String jsonString)
+  public static String[] jsonNodeArrayToList(JsonNode jsonNode)
   {
-    //TODO jsonArrayStringToList
-    String modString = jsonString.replaceFirst("\\[", "");
-    modString = modString.replaceFirst("\\]", "");
-    modString = modString.replaceAll("\"", "");
-    return modString.split("\\s*,\\s*");
+    return (String[]) jsonNodeArrayToArrayList(jsonNode).toArray();
   }
 }
