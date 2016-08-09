@@ -18,10 +18,15 @@
  */
 package org.apache.pirk.schema.response;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hadoop.io.Text;
 import org.apache.pirk.query.wideskies.QueryInfo;
@@ -29,8 +34,7 @@ import org.apache.pirk.schema.data.DataSchema;
 import org.apache.pirk.schema.data.DataSchemaRegistry;
 import org.apache.pirk.schema.query.QuerySchema;
 import org.apache.pirk.schema.query.QuerySchemaRegistry;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +49,9 @@ public class QueryResponseJSON implements Serializable
 
   private static final Logger logger = LoggerFactory.getLogger(QueryResponseJSON.class);
 
-  private JSONObject jsonObj = null;
+  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private ObjectNode jsonNode = null;
 
   private DataSchema dSchema = null;
 
@@ -78,7 +84,7 @@ public class QueryResponseJSON implements Serializable
     QuerySchema qSchema = QuerySchemaRegistry.get(queryInfo.getQueryType());
     dSchema = DataSchemaRegistry.get(qSchema.getDataSchemaName());
 
-    jsonObj = new JSONObject();
+    jsonNode = mapper.createObjectNode();
     setGeneralQueryResponseFields(queryInfo);
   }
 
@@ -87,7 +93,7 @@ public class QueryResponseJSON implements Serializable
    */
   public QueryResponseJSON()
   {
-    jsonObj = new JSONObject();
+    jsonNode = mapper.createObjectNode();
   }
 
   /**
@@ -95,22 +101,29 @@ public class QueryResponseJSON implements Serializable
    */
   public QueryResponseJSON(String jsonString)
   {
-    jsonObj = (JSONObject) JSONValue.parse(jsonString);
+    try
+    {
+      jsonNode = mapper.readValue(jsonString, ObjectNode.class);
+    } catch (IOException e)
+    {
+      logger.error("Unable to parse json string.");
+      e.printStackTrace();
+    }
   }
 
-  public JSONObject getJSONObject()
+  public ObjectNode getJSONObject()
   {
-    return jsonObj;
+    return jsonNode;
   }
 
   public String getJSONString()
   {
-    return jsonObj.toString();
+    return jsonNode.toString();
   }
 
   public Object getValue(String key)
   {
-    return jsonObj.get(key);
+    return jsonNode.get(key);
   }
 
   public QueryInfo getQueryInfo()
@@ -125,12 +138,12 @@ public class QueryResponseJSON implements Serializable
     Set<String> schemaStringRep = dSchema.getNonArrayElements();
     for (String key : schemaStringRep)
     {
-      jsonObj.put(key, "");
+      jsonNode.put(key, "");
     }
     Set<String> schemaListRep = dSchema.getArrayElements();
     for (String key : schemaListRep)
     {
-      jsonObj.put(key, new ArrayList<>());
+      jsonNode.putArray(key);
     }
   }
 
@@ -143,10 +156,11 @@ public class QueryResponseJSON implements Serializable
   {
     if (dSchema == null)
     {
-      jsonObj.put(key, val);
+      jsonNode.putPOJO(key, val);
     }
     else
     {
+      /*
       if (dSchema.getArrayElements().contains(key))
       {
         if (!(val instanceof ArrayList))
@@ -159,20 +173,49 @@ public class QueryResponseJSON implements Serializable
           }
           list = (ArrayList<Object>) jsonObj.get(key);
 
+          if (!list.contains(val))          {            list.add(val);          }
+          jsonObj.put(key, list);
+        }
+        else{ jsonObj.put(key, val);    }
+      }
+      else if (dSchema.getNonArrayElements().contains(key) || key.equals(SELECTOR))      {        jsonObj.put(key, val);      }
+      else      {        logger.info("WARN: Schema does not contain key = " + key);      }
+
+       */
+      if (dSchema.getArrayElements().contains(key))
+      {
+        // If val is not an instance of ArrayList, we pretend it doesn't exist and make an empty record for this array.
+        if (!(val instanceof ArrayList))
+        {
+          ArrayList<Object> list = new ArrayList<>();
+          if (!jsonNode.has(key))
+          {
+            jsonNode.putArray(key);
+          }
+
+          try
+          {
+            list = (ArrayList<Object>) mapper.readValue(jsonNode.get(key).toString(), new TypeReference<ArrayList<Object>>(){});
+          } catch (IOException e)
+          {
+            logger.error("Unable to parse JSON node of array of objects.");
+            e.printStackTrace();
+          }
+
           if (!list.contains(val))
           {
             list.add(val);
           }
-          jsonObj.put(key, list);
+          jsonNode.putPOJO(key, list);
         }
         else
         {
-          jsonObj.put(key, val);
+          jsonNode.putPOJO(key, val);
         }
       }
       else if (dSchema.getNonArrayElements().contains(key) || key.equals(SELECTOR))
       {
-        jsonObj.put(key, val);
+        jsonNode.putPOJO(key, val);
       }
       else
       {
@@ -185,7 +228,7 @@ public class QueryResponseJSON implements Serializable
   @SuppressWarnings("unchecked")
   public void setSelector(Object val)
   {
-    jsonObj.put(SELECTOR, val);
+    jsonNode.putPOJO(SELECTOR, val);
   }
 
   public void setAllFields(HashMap<String,String> dataMap)
@@ -202,15 +245,15 @@ public class QueryResponseJSON implements Serializable
   @SuppressWarnings("unchecked")
   public void setGeneralQueryResponseFields(QueryInfo queryInfo)
   {
-    jsonObj.put(EVENT_TYPE, queryInfo.getQueryType());
-    jsonObj.put(QUERY_ID, queryInfo.getQueryNum());
-    jsonObj.put(QUERY_NAME, queryInfo.getQueryName());
+    jsonNode.put(EVENT_TYPE, queryInfo.getQueryType());
+    jsonNode.put(QUERY_ID, queryInfo.getQueryNum());
+    jsonNode.put(QUERY_NAME, queryInfo.getQueryName());
   }
 
   @Override
   public String toString()
   {
-    return jsonObj.toString();
+    return jsonNode.toString();
   }
 
   @Override
@@ -218,7 +261,7 @@ public class QueryResponseJSON implements Serializable
   {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((jsonObj == null) ? 0 : jsonObj.hashCode());
+    result = prime * result + ((jsonNode == null) ? 0 : jsonNode.hashCode());
     return result;
   }
 
@@ -232,22 +275,33 @@ public class QueryResponseJSON implements Serializable
     if (getClass() != obj.getClass())
       return false;
     QueryResponseJSON other = (QueryResponseJSON) obj;
-    if (jsonObj == null)
+    if (jsonNode == null)
     {
-      if (other.jsonObj != null)
+      if (other.jsonNode != null)
         return false;
     }
     else
     {
-      Set<String> thisKeySet = jsonObj.keySet();
-      Set<String> otherKeySet = other.jsonObj.keySet();
+      Set<String> thisKeySet = new HashSet<>();
+      Iterator<String> thisfielditer = jsonNode.fieldNames();
+      while(thisfielditer.hasNext())
+      {
+        thisKeySet.add(thisfielditer.next());
+      }
+
+      Set<String> otherKeySet = new HashSet<>();
+      Iterator<String> otherfielditer = other.jsonNode.fieldNames();
+      while(otherfielditer.hasNext())
+      {
+        thisKeySet.add(otherfielditer.next());
+      }
       if (!thisKeySet.equals(otherKeySet))
       {
         return false;
       }
       for (String key : thisKeySet)
       {
-        if (!(jsonObj.get(key)).equals(other.jsonObj.get(key)))
+        if (!(jsonNode.get(key)).equals(other.jsonNode.get(key)))
         {
           return false;
         }
