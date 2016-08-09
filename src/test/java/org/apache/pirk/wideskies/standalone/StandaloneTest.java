@@ -20,13 +20,13 @@ package org.apache.pirk.wideskies.standalone;
 
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.pirk.schema.data.DataSchemaRegistry;
 import org.apache.pirk.schema.query.QuerySchemaRegistry;
 import org.apache.pirk.schema.query.filter.StopListFilter;
 import org.apache.pirk.test.utils.BaseTests;
 import org.apache.pirk.test.utils.Inputs;
 import org.apache.pirk.utils.SystemConfiguration;
-import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -84,8 +84,8 @@ public class StandaloneTest
   @Test
   public void runTests() throws Exception
   {
-    ArrayList<JSONObject> dataElements = Inputs.createJSONDataElements();
-    ArrayList<JSONObject> dataElementsRcode3 = Inputs.getRcode3JSONDataElements();
+    ArrayList<JsonNode> dataElements = Inputs.createJSONDataElements();
+    ArrayList<JsonNode> dataElementsRcode3 = Inputs.getRcode3JSONDataElements();
 
     SystemConfiguration.setProperty("pir.allowAdHocQuerySchemas", "false");
     SystemConfiguration.setProperty("pir.embedQuerySchema", "false");
