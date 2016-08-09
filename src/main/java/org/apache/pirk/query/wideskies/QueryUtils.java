@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -37,7 +39,6 @@ import org.apache.pirk.utils.KeyedHash;
 import org.apache.pirk.utils.StringUtils;
 import org.apache.pirk.utils.SystemConfiguration;
 import org.elasticsearch.hadoop.mr.WritableArrayWritable;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ import org.slf4j.LoggerFactory;
 public class QueryUtils
 {
   private static final Logger logger = LoggerFactory.getLogger(QueryUtils.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   /**
    * Method to convert the given BigInteger raw data element partitions to a QueryResponseJSON object based upon the given queryType
@@ -103,7 +105,7 @@ public class QueryUtils
   /**
    * Method to convert the given data element given by the JSONObject data element into the extracted BigInteger partitions based upon the given queryType
    */
-  public static ArrayList<BigInteger> partitionDataElement(QuerySchema qSchema, JSONObject jsonData, boolean embedSelector) throws Exception
+  public static ArrayList<BigInteger> partitionDataElement(QuerySchema qSchema, JsonNode jsonData, boolean embedSelector) throws Exception
   {
     ArrayList<BigInteger> parts = new ArrayList<>();
     DataSchema dSchema = DataSchemaRegistry.get(qSchema.getDataSchemaName());
@@ -124,8 +126,8 @@ public class QueryUtils
     List<String> dataFieldsToExtract = qSchema.getElementNames();
     for (String fieldName : dataFieldsToExtract)
     {
-      Object dataElement = null;
-      if (jsonData.containsKey(fieldName))
+      JsonNode dataElement = null;
+      if (jsonData.has(fieldName))
       {
         dataElement = jsonData.get(fieldName);
       }
@@ -139,7 +141,7 @@ public class QueryUtils
         }
         else
         {
-          elementArray = StringUtils.jsonArrayStringToArrayList(dataElement.toString());
+          elementArray = StringUtils.jsonNodeArrayToArrayList(dataElement);
         }
         logger.debug("Adding parts for fieldName = " + fieldName + " type = " + dSchema.getElementType(fieldName) + " jsonData = " + dataElement);
 
@@ -149,11 +151,12 @@ public class QueryUtils
       {
         if (dataElement == null)
         {
-          dataElement = "0";
+          //dataElement = "0"
+          dataElement = mapper.createObjectNode();
         }
         logger.debug("Adding parts for fieldName = " + fieldName + " type = " + dSchema.getElementType(fieldName) + " jsonData = " + dataElement);
 
-        parts.addAll(((DataPartitioner) dSchema.getPartitionerForElement(fieldName)).toPartitions(dataElement.toString(), dSchema.getElementType(fieldName)));
+        parts.addAll(((DataPartitioner) dSchema.getPartitionerForElement(fieldName)).toPartitions(mapper.readValue(dataElement.toString(), Object.class), dSchema.getElementType(fieldName)));
       }
     }
     logger.debug("parts.size() = " + parts.size());
@@ -330,7 +333,7 @@ public class QueryUtils
    * <p>
    * Pulls first element of array if element is an array type
    */
-  public static String getSelectorByQueryTypeJSON(QuerySchema qSchema, JSONObject dataMap)
+  public static String getSelectorByQueryTypeJSON(QuerySchema qSchema, JsonNode dataMap)
   {
     String selector;
 
@@ -339,12 +342,12 @@ public class QueryUtils
 
     if (dSchema.isArrayElement(fieldName))
     {
-      ArrayList<String> elementArray = StringUtils.jsonArrayStringToArrayList(dataMap.get(fieldName).toString());
+      ArrayList<String> elementArray = StringUtils.jsonNodeArrayToArrayList(dataMap.get(fieldName));
       selector = elementArray.get(0);
     }
     else
     {
-      selector = dataMap.get(fieldName).toString();
+      selector = dataMap.get(fieldName).textValue();
     }
     return selector;
   }
