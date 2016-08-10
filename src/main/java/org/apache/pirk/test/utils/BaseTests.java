@@ -372,7 +372,7 @@ public class BaseTests
     {
       JsonNode dataMap = dataElements.get(i);
       boolean addElement = false;
-      if (dataMap.get(Inputs.SRCIP).toString().equals("55.55.55.55") || dataMap.get(Inputs.SRCIP).toString().equals("5.6.7.8"))
+      if (dataMap.get(Inputs.SRCIP).textValue().equals("55.55.55.55") || dataMap.get(Inputs.SRCIP).textValue().equals("5.6.7.8"))
       {
         addElement = true;
       }
