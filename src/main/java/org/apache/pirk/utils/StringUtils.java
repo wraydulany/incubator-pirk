@@ -23,6 +23,8 @@ import java.util.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.MapWritable;
@@ -246,6 +248,104 @@ public class StringUtils
     return retlist;
   }
 
+  public static void jacksonSimpleTypePutterHelper(ObjectNode node, String key, Object value)
+  {
+
+    switch(JsonNodeType.valueOf(value.getClass().getName())){
+
+      case BOOLEAN:
+        node.put(key, (Boolean) value);
+        break;
+      case NUMBER:
+        //TODO turn this into yet another switch, maybe
+        if(value instanceof Integer)
+        {
+          node.put(key, (Integer) value);
+        }
+        else if(value instanceof Long)
+        {
+          node.put(key, (Long) value);
+        }
+        else if(value instanceof Double)
+        {
+          node.put(key, (Double) value);
+        }
+        else if(value instanceof Float)
+        {
+          node.put(key, (Float) value);
+        }
+        else if(value instanceof Short)
+        {
+          node.put(key, (Short) value);
+        }
+        else node.putNull(key);
+        break;
+      case STRING:
+        node.put(key, (String) value);
+      case ARRAY:
+      case OBJECT:
+      case POJO:
+        node.putPOJO(key, value);
+      case BINARY:
+        node.put(key, (byte[]) value);
+      case MISSING:
+      case NULL:
+      default:
+        node.putNull(key);
+        break;
+    }
+
+  }
+
+  public static void jacksonSimpleTypePutterHelper(ArrayNode node, Object value)
+  {
+
+    switch(JsonNodeType.valueOf(value.getClass().getName())){
+
+      case BOOLEAN:
+        node.add((Boolean) value);
+        break;
+      case NUMBER:
+        //TODO turn this into yet another switch, maybe
+        if(value instanceof Integer)
+        {
+          node.add((Integer) value);
+        }
+        else if(value instanceof Long)
+        {
+          node.add((Long) value);
+        }
+        else if(value instanceof Double)
+        {
+          node.add((Double) value);
+        }
+        else if(value instanceof Float)
+        {
+          node.add((Float) value);
+        }
+        else if(value instanceof Short)
+        {
+          node.add((Short) value);
+        }
+        else node.addNull();
+        break;
+      case STRING:
+        node.add((String) value);
+      case ARRAY:
+      case OBJECT:
+      case POJO:
+        node.addPOJO(value);
+      case BINARY:
+        node.add((byte[]) value);
+      case MISSING:
+      case NULL:
+      default:
+        node.addNull();
+        break;
+    }
+
+  }
+
   public static Object jacksonSimpleTypeHelper(JsonNode node)
   {
     switch(node.getNodeType()){
@@ -282,7 +382,8 @@ public class StringUtils
    */
   public static String[] jsonNodeArrayToList(JsonNode jsonNode)
   {
-    return (String[]) jsonNodeArrayToArrayList(jsonNode).toArray();
+    Object[] objarray = jsonNodeArrayToArrayList(jsonNode).toArray();
+    return (Arrays.copyOf(objarray, objarray.length, String[].class));
   }
 
   public static Set<String> jsonGetKeys(JsonNode jsonNode)

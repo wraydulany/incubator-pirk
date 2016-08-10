@@ -92,7 +92,7 @@ public class DecryptResponseRunnable implements Runnable
       resultMap.put(selector, new ArrayList<QueryResponseJSON>());
     }
 
-    logger.debug("numResults = " + rElements.size() + " numPartitionsPerDataElement = " + numPartitionsPerDataElement);
+    logger.info("numResults = " + rElements.size() + " numPartitionsPerDataElement = " + numPartitionsPerDataElement);
 
     // Pull the hits for each selector
     int hits = 0;
@@ -148,7 +148,7 @@ public class DecryptResponseRunnable implements Runnable
             e.printStackTrace();
           }
           qrJOSN.setMapping(selectorName, selector);
-          logger.debug("selector = " + selector + " qrJOSN = " + qrJOSN.getJSONString());
+          logger.info("selector = " + selector + " qrJOSN = " + qrJOSN.getJSONString());
 
           // Add the hit for this selector - if we are using embedded selectors, check to make sure
           // that the hit's embedded selector in the qrJOSN and the once in the embedSelectorMap match
@@ -158,14 +158,16 @@ public class DecryptResponseRunnable implements Runnable
             if (!(embedSelectorMap.get(selectorIndex)).equals(qrJOSN.getValue(QueryResponseJSON.SELECTOR)))
             {
               addHit = false;
-              logger.debug("qrJOSN embedded selector = " + qrJOSN.getValue(QueryResponseJSON.SELECTOR) + " != original embedded selector = "
+              logger.info("qrJOSN embedded selector = " + qrJOSN.getValue(QueryResponseJSON.SELECTOR) + " != original embedded selector = "
                   + embedSelectorMap.get(selectorIndex));
             }
           }
           if (addHit)
           {
             ArrayList<QueryResponseJSON> selectorHitList = resultMap.get(selector);
+            logger.info("The selector hitlist before: " + selectorHitList);
             selectorHitList.add(qrJOSN);
+            logger.info("The selector hitlist after: " + selectorHitList);
             resultMap.put(selector, selectorHitList);
 
             // Add the selector into the wlJSONHit
@@ -177,5 +179,6 @@ public class DecryptResponseRunnable implements Runnable
       }
       ++hits;
     }
+    logger.info("WHY IS THIS EMPTY? The resultmap looks like this, I think: " + resultMap.toString());
   }
 }

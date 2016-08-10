@@ -215,7 +215,7 @@ public class Responder
   // querier for decryption
   public void setResponseElements()
   {
-    logger.info("numResponseElements = " + columns.size());
+    logger.debug("numResponseElements = " + columns.size());
     // for(int key: columns.keySet())
     // {
     // logger.debug("key = " + key + " column = " + columns.get(key));

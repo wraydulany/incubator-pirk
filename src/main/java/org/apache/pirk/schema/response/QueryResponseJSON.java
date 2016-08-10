@@ -104,7 +104,8 @@ public class QueryResponseJSON implements Serializable
   {
     try
     {
-      jsonNode = mapper.readValue(jsonString, ObjectNode.class);
+      logger.info("Trying to create a query response for jsonString: " + jsonString);
+      jsonNode = (ObjectNode) mapper.readTree(jsonString);
     } catch (IOException e)
     {
       logger.error("Unable to parse json string.");
@@ -124,7 +125,7 @@ public class QueryResponseJSON implements Serializable
 
   public Object getValue(String key)
   {
-    return jsonNode.get(key);
+    return StringUtils.jacksonSimpleTypeHelper(jsonNode.get(key));
   }
 
   public QueryInfo getQueryInfo()
@@ -157,7 +158,8 @@ public class QueryResponseJSON implements Serializable
   {
     if (dSchema == null)
     {
-      jsonNode.putPOJO(key, val);
+      logger.info("Adding to key " + key + " the pojo " + val);
+      StringUtils.jacksonSimpleTypePutterHelper(jsonNode, key, val);
     }
     else
     {
@@ -194,6 +196,7 @@ public class QueryResponseJSON implements Serializable
             jsonNode.putArray(key);
           }
 
+          // TODO this needs to be done as an ArrayList<Object>.
           ArrayList<String> templist = StringUtils.jsonNodeArrayToArrayList(jsonNode.get(key));
           list.addAll(templist);
 
@@ -202,16 +205,30 @@ public class QueryResponseJSON implements Serializable
           {
             list.add(val);
           }
+          for(Object element: list)
+          {
+            StringUtils.jacksonSimpleTypePutterHelper((ArrayNode) jsonNode.get(key), element);
+          }
+          /*
+          StringUtils.jacksonSimpleTypePutterHelper(jsonNode, key, val);
           jsonNode.putPOJO(key, list);
+          */
         }
         else
         {
-          jsonNode.putPOJO(key, val);
+          if (!jsonNode.has(key))
+          {
+            jsonNode.putArray(key);
+          }
+          for(Object element: (ArrayList<Object>) val)
+          {
+            StringUtils.jacksonSimpleTypePutterHelper((ArrayNode) jsonNode.get(key), element);
+          }
         }
       }
       else if (dSchema.getNonArrayElements().contains(key) || key.equals(SELECTOR))
       {
-        jsonNode.putPOJO(key, val);
+        StringUtils.jacksonSimpleTypePutterHelper(jsonNode, key, val);
       }
       else
       {
