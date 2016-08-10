@@ -52,7 +52,7 @@ public class QueryResponseJSON implements Serializable
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  private ObjectNode jsonNode = null;
+  private JsonNode jsonNode = null;
 
   private DataSchema dSchema = null;
 
@@ -113,7 +113,7 @@ public class QueryResponseJSON implements Serializable
     }
   }
 
-  public ObjectNode getJsonNode()
+  public JsonNode getJsonNode()
   {
     return jsonNode;
   }
@@ -140,12 +140,12 @@ public class QueryResponseJSON implements Serializable
     Set<String> schemaStringRep = dSchema.getNonArrayElements();
     for (String key : schemaStringRep)
     {
-      jsonNode.put(key, "");
+      ((ObjectNode)jsonNode).put(key, "");
     }
     Set<String> schemaListRep = dSchema.getArrayElements();
     for (String key : schemaListRep)
     {
-      jsonNode.putArray(key);
+      ((ObjectNode)jsonNode).putArray(key);
     }
   }
 
@@ -188,16 +188,19 @@ public class QueryResponseJSON implements Serializable
       if (dSchema.getArrayElements().contains(key))
       {
         // If val is not an instance of ArrayList, we pretend it doesn't exist and make an empty record for this array.
+        // No, what we should do if val is not itself an array list is just add it on to the array.
         if (!(val instanceof ArrayList))
         {
           ArrayList<Object> list = new ArrayList<>();
+          // if the json node doesn't exist, make it.
           if (!jsonNode.has(key))
           {
-            jsonNode.putArray(key);
+            ((ObjectNode) jsonNode).putArray(key);
           }
 
           // TODO this needs to be done as an ArrayList<Object>.
           ArrayList<String> templist = StringUtils.jsonNodeArrayToArrayList(jsonNode.get(key));
+          logger.info("I just got this list from a suspected array-type jsonNode: " + templist);
           list.addAll(templist);
 
 
@@ -218,10 +221,11 @@ public class QueryResponseJSON implements Serializable
         {
           if (!jsonNode.has(key))
           {
-            jsonNode.putArray(key);
+            ((ObjectNode) jsonNode).putArray(key);
           }
           for(Object element: (ArrayList<Object>) val)
           {
+            logger.info("Adding val " + val + " of type " + val.getClass() + " to jsonNode " + jsonNode + " under key " + key);
             StringUtils.jacksonSimpleTypePutterHelper((ArrayNode) jsonNode.get(key), element);
           }
         }
@@ -241,7 +245,7 @@ public class QueryResponseJSON implements Serializable
   @SuppressWarnings("unchecked")
   public void setSelector(Object val)
   {
-    jsonNode.putPOJO(SELECTOR, val);
+    StringUtils.jacksonSimpleTypePutterHelper(jsonNode, SELECTOR, val);
   }
 
   public void setAllFields(HashMap<String,String> dataMap)
@@ -258,9 +262,9 @@ public class QueryResponseJSON implements Serializable
   @SuppressWarnings("unchecked")
   public void setGeneralQueryResponseFields(QueryInfo queryInfo)
   {
-    jsonNode.put(EVENT_TYPE, queryInfo.getQueryType());
-    jsonNode.put(QUERY_ID, queryInfo.getQueryNum());
-    jsonNode.put(QUERY_NAME, queryInfo.getQueryName());
+    ((ObjectNode) jsonNode).put(EVENT_TYPE, queryInfo.getQueryType());
+    ((ObjectNode) jsonNode).put(QUERY_ID, queryInfo.getQueryNum());
+    ((ObjectNode) jsonNode).put(QUERY_NAME, queryInfo.getQueryName());
   }
 
   @Override

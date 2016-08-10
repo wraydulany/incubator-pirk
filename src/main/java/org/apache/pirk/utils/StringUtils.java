@@ -20,6 +20,7 @@ package org.apache.pirk.utils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -191,9 +192,14 @@ public class StringUtils
       while(it.hasNext())
       {
         Map.Entry<String,Object> pair = (Map.Entry) it.next();
-        if (dataSchema.isArrayElement(pair.getKey()) && !jsonNode.get(pair.getKey()).isArray())
+        if (dataSchema.isArrayElement(pair.getKey()))// && !jsonNode.get(pair.getKey()).isArray())
         {
-          throw new IOException("Inappropriately parsed JSON array string.");
+          List<String> temparray = ((ArrayList<Object>) pair.getValue()).stream().map(object -> Objects.toString(object,null)).collect(Collectors.toList());
+          map.put(pair.getKey(), (ArrayList<String>) temparray);
+        }
+        else
+        {
+          map.put(pair.getKey(), pair.getValue().toString());
         }
       }
     } catch (IOException e)
@@ -248,102 +254,103 @@ public class StringUtils
     return retlist;
   }
 
-  public static void jacksonSimpleTypePutterHelper(ObjectNode node, String key, Object value)
+  public static void jacksonSimpleTypePutterHelper(JsonNode node, String key, Object value)
   {
-
-    switch(JsonNodeType.valueOf(value.getClass().getName())){
-
-      case BOOLEAN:
-        node.put(key, (Boolean) value);
-        break;
-      case NUMBER:
-        //TODO turn this into yet another switch, maybe
-        if(value instanceof Integer)
-        {
-          node.put(key, (Integer) value);
-        }
-        else if(value instanceof Long)
-        {
-          node.put(key, (Long) value);
-        }
-        else if(value instanceof Double)
-        {
-          node.put(key, (Double) value);
-        }
-        else if(value instanceof Float)
-        {
-          node.put(key, (Float) value);
-        }
-        else if(value instanceof Short)
-        {
-          node.put(key, (Short) value);
-        }
-        else node.putNull(key);
-        break;
-      case STRING:
-        node.put(key, (String) value);
-      case ARRAY:
-      case OBJECT:
-      case POJO:
-        node.putPOJO(key, value);
-      case BINARY:
-        node.put(key, (byte[]) value);
-      case MISSING:
-      case NULL:
-      default:
-        node.putNull(key);
-        break;
+    //TODO turn this into a switch, maybe
+    if(value instanceof Boolean){
+      ((ObjectNode) node).put(key, (Boolean) value);
     }
-
+    else if(value instanceof Integer)
+    {
+      ((ObjectNode) node).put(key, (Integer) value);
+    }
+    else if(value instanceof Long)
+    {
+      ((ObjectNode) node).put(key, (Long) value);
+    }
+    else if(value instanceof Double)
+    {
+      ((ObjectNode) node).put(key, (Double) value);
+    }
+    else if(value instanceof Float)
+    {
+      ((ObjectNode) node).put(key, (Float) value);
+    }
+    else if(value instanceof Short)
+    {
+      ((ObjectNode) node).put(key, (Short) value);
+    }
+    else if(value instanceof String)
+    {
+      ((ObjectNode) node).put(key, (String) value);
+    }
+    else if(value instanceof ArrayList){
+      logger.info("I'm making an array node of key " + key + " and value " + value);
+      ArrayNode arrayNode = ((ObjectNode) node).putArray(key);
+      for(Object element: (ArrayList<Object>)value)
+      {
+        jacksonSimpleTypePutterHelper(arrayNode, element);
+      }
+      logger.info("Result: " + node.toString());
+    }
+    else if(value instanceof Object)
+    {
+      ((ObjectNode) node).putPOJO(key, value);
+    }
+    else if(value instanceof byte[])
+    {
+      ((ObjectNode) node).put(key, (byte[]) value);
+    }
+    else if(value == null){
+      ((ObjectNode) node).putNull(key);
+    }
+    else ((ObjectNode) node).putNull(key);
   }
 
   public static void jacksonSimpleTypePutterHelper(ArrayNode node, Object value)
   {
-
-    switch(JsonNodeType.valueOf(value.getClass().getName())){
-
-      case BOOLEAN:
-        node.add((Boolean) value);
-        break;
-      case NUMBER:
-        //TODO turn this into yet another switch, maybe
-        if(value instanceof Integer)
-        {
-          node.add((Integer) value);
-        }
-        else if(value instanceof Long)
-        {
-          node.add((Long) value);
-        }
-        else if(value instanceof Double)
-        {
-          node.add((Double) value);
-        }
-        else if(value instanceof Float)
-        {
-          node.add((Float) value);
-        }
-        else if(value instanceof Short)
-        {
-          node.add((Short) value);
-        }
-        else node.addNull();
-        break;
-      case STRING:
-        node.add((String) value);
-      case ARRAY:
-      case OBJECT:
-      case POJO:
-        node.addPOJO(value);
-      case BINARY:
-        node.add((byte[]) value);
-      case MISSING:
-      case NULL:
-      default:
-        node.addNull();
-        break;
+    //TODO turn this into a switch, maybe
+    if(value instanceof Boolean){
+      node.add((Boolean) value);
     }
-
+    else if(value instanceof Integer)
+    {
+      node.add((Integer) value);
+    }
+    else if(value instanceof Long)
+    {
+      node.add((Long) value);
+    }
+    else if(value instanceof Double)
+    {
+      node.add((Double) value);
+    }
+    else if(value instanceof Float)
+    {
+      node.add((Float) value);
+    }
+    else if(value instanceof Short)
+    {
+      node.add((Short) value);
+    }
+    else if(value instanceof String)
+    {
+      node.add((String) value);
+    }
+    else if(value != null) //instead of instanceof Object, b/c that always hits.
+    {
+      node.addPOJO(value);
+    }
+    /* will never be true
+    else if(value instanceof byte[])
+    {
+      node.add((byte[]) value);
+    }
+    */
+    else if(value == null){
+      node.addNull();
+    }
+    else node.addNull();
   }
 
   public static Object jacksonSimpleTypeHelper(JsonNode node)

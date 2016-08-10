@@ -357,6 +357,8 @@ public class BaseTests
       numExpectedResults = 3;
       results = StandaloneQuery.performStandaloneQuery(dataElements, Inputs.DNS_SRCIP_QUERY, selectorsIP, numThreads, false);
     }
+    logger.info("We expect " + numExpectedResults + " results");
+    logger.info("Results!:");
     printResultList(results);
 
     if (results.size() != numExpectedResults)
@@ -369,7 +371,6 @@ public class BaseTests
     while (i < (dataElements.size() - removeTailElements))
     {
       JsonNode dataMap = dataElements.get(i);
-
       boolean addElement = false;
       if (dataMap.get(Inputs.SRCIP).toString().equals("55.55.55.55") || dataMap.get(Inputs.SRCIP).toString().equals("5.6.7.8"))
       {
@@ -377,6 +378,7 @@ public class BaseTests
       }
       if (addElement)
       {
+        logger.info("Checking whether we're keeping prepoulated data element " + dataMap);
         // Form the correct result QueryResponseJSON object
         QueryResponseJSON qrJSON = new QueryResponseJSON();
         qrJSON.setMapping(QueryResponseJSON.QUERY_ID, queryNum);
@@ -648,5 +650,6 @@ public class BaseTests
     {
       logger.info("[No Results]");
     }
+    logger.info("[This Ends The Result List]");
   }
 }

@@ -73,7 +73,7 @@ public class QueryUtils
       qrJSON.setSelector(embeddedSelector);
       partsIndex += 4;
 
-      logger.debug("Extracted embedded selector = " + embeddedSelector + " parts.size() = " + parts.size());
+      logger.info("Extracted embedded selector = " + embeddedSelector + " parts.size() = " + parts.size());
     }
 
     List<String> dataFieldsToExtract = qSchema.getElementNames();
@@ -88,14 +88,14 @@ public class QueryUtils
       for (int i = 0; i < numElements; ++i)
       {
         String type = dSchema.getElementType(fieldName);
-        logger.debug("Extracting value for fieldName = " + fieldName + " type = " + type + " partsIndex = " + partsIndex);
+        logger.info("Extracting value for fieldName = " + fieldName + " type = " + type + " partsIndex = " + partsIndex);
 
         Object element = ((DataPartitioner) dSchema.getPartitionerForElement(fieldName)).fromPartitions(parts, partsIndex, type);
 
         qrJSON.setMapping(fieldName, element);
         partsIndex += ((DataPartitioner) dSchema.getPartitionerForElement(fieldName)).getNumPartitions(type);
 
-        logger.debug("Adding qrJSON element = " + element + " element.getClass() = " + element.getClass());
+        logger.info("Line 98ish: Adding qrJSON element = " + element + " element.getClass() = " + element.getClass());
       }
     }
 

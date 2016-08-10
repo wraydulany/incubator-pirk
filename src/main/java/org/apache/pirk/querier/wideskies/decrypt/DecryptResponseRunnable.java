@@ -94,10 +94,11 @@ public class DecryptResponseRunnable implements Runnable
 
     logger.info("numResults = " + rElements.size() + " numPartitionsPerDataElement = " + numPartitionsPerDataElement);
 
+    logger.info("Go fuck yourself.");
     // Pull the hits for each selector
     int hits = 0;
     int maxHitsPerSelector = rElements.size() / numPartitionsPerDataElement; // Max number of data hits in the response elements for a given selector
-    logger.debug("numHits = " + maxHitsPerSelector);
+    logger.info("numHits = " + maxHitsPerSelector);
     while (hits < maxHitsPerSelector)
     {
       int selectorIndex = selectors.firstKey();
@@ -134,6 +135,7 @@ public class DecryptResponseRunnable implements Runnable
           ++partNum;
         }
 
+        logger.info("Zero Element?" + zeroElement);
         logger.debug("parts.size() = " + parts.size());
 
         if (!zeroElement)
@@ -145,6 +147,7 @@ public class DecryptResponseRunnable implements Runnable
             qrJOSN = QueryUtils.extractQueryResponseJSON(queryInfo, qSchema, parts);
           } catch (Exception e)
           {
+            logger.error("Caght query extraction exception ",e);
             e.printStackTrace();
           }
           qrJOSN.setMapping(selectorName, selector);
