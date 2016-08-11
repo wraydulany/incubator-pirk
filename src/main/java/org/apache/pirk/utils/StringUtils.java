@@ -59,13 +59,16 @@ public class StringUtils
     // Convert to JSON and then write to a String - ensures JSON read-in compatibility
     //ObjectMapper mapper = new ObjectMapper();
     String jsonString;
+    /*
     ObjectNode rootnode = mapper.createObjectNode();
     for( Writable key : map.keySet()){
       rootnode.put(key.toString(), map.get(key).toString());
     }
+    */
     try
     {
-      jsonString = mapper.writeValueAsString(rootnode);
+      //jsonString = mapper.writeValueAsString(rootnode);
+      jsonString = mapper.writeValueAsString(map);
     } catch (JsonProcessingException e)
     {
       logger.error("Error processing MapWritable into JSON.");
