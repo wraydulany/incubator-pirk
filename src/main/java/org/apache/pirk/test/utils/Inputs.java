@@ -281,7 +281,7 @@ public class Inputs
     logger.info("PIR JSON input being created at " + inputJSONFile);
 
     ArrayList<JsonNode> dataElementsJSON = createJSONDataElements();
-
+    logger.info("Created arraylist:" + dataElementsJSON);
     HDFS.writeFile(dataElementsJSON, fs, inputJSONFile, true);
     logger.info("PIR JSON input successfully created!");
 

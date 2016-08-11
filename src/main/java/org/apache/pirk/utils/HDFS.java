@@ -90,6 +90,7 @@ public class HDFS
       //todo test for one per line-ness
       for (JsonNode element : elements)
       {
+        logger.info("The results of writeValueAsString:'" + mapper.writeValueAsString(element) + "'");
         bw.write(mapper.writeValueAsString(element));
         bw.newLine();
       }
