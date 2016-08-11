@@ -100,7 +100,7 @@ public class HDFS
       if (deleteOnExit)
       {
         //fs.deleteOnExit(filePath);
-        logger.info("NOPE! NO DELETING MY FILE!")
+        logger.info("NOPE! NO DELETING MY FILE!");
       }
     } catch (IOException e)
     {
