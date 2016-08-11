@@ -20,11 +20,14 @@ package org.apache.pirk.responder.wideskies.mapreduce;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.pirk.inputformat.hadoop.BytesArrayWritable;
 import org.apache.pirk.query.wideskies.Query;
@@ -122,6 +125,14 @@ public class HashSelectorsAndPartitionDataMapper extends Mapper<Text,MapWritable
   public void map(Text key, MapWritable value, Context ctx) throws IOException, InterruptedException
   {
     logger.info("key = " + key.toString());
+    String tempstring = new String();
+    Iterator it = value.entrySet().iterator();
+    while(it.hasNext())
+    {
+      Map.Entry<Text,Writable> pair = (Map.Entry) it.next();
+      tempstring += pair.getKey() + ": " + pair.getValue();
+    }
+    logger.info("map = " + tempstring);
     logger.info("value: " + StringUtils.mapWritableToString(value));
 
     boolean passFilter = true;
