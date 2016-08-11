@@ -25,12 +25,8 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hadoop.io.ArrayWritable;
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.*;
 import org.apache.pirk.schema.data.DataSchema;
 import org.elasticsearch.hadoop.mr.WritableArrayWritable;
 
@@ -57,14 +53,19 @@ public class StringUtils
   public static String mapWritableToString(MapWritable map)
   {
     // Convert to JSON and then write to a String - ensures JSON read-in compatibility
-    //ObjectMapper mapper = new ObjectMapper();
-    String jsonString;
+    ObjectNode rootNode = mapper.createObjectNode();
+    Iterator it = map.entrySet().iterator();
+    while(it.hasNext())
+    {
+      Map.Entry<Writable,Object> pair = (Map.Entry) it.next();
+      keyValToJsonNode(rootNode, pair.getKey().toString(), pair.getValue());
+    }
     /*
-    ObjectNode rootnode = mapper.createObjectNode();
     for( Writable key : map.keySet()){
+
       rootnode.put(key.toString(), map.get(key).toString());
     }
-    */
+
     try
     {
       //jsonString = mapper.writeValueAsString(rootnode);
@@ -75,8 +76,8 @@ public class StringUtils
       e.printStackTrace();
       return map.toString();
     }
-
-    return jsonString;
+    */
+    return rootNode.toString();
   }
 
   /**
@@ -213,6 +214,134 @@ public class StringUtils
 
     return map;
   }
+
+  public static void keyValToJsonNode(JsonNode root, String key, Object value)
+  {
+    // There has got to be a better way, but this ugly use of a long line of
+    // instanceof will work.
+    // I think that in the future perhaps if there is serialization needed beyond
+    // the primitive types that we should require the user to provide a class object,
+    // as it's easy to teach a jackson ObjectMapper to do the right thing if you hand
+    // it a properly constructed Class.
+    // TODO Implement BigInt and BigDecimal handling, and VIntWritable and VLongWritable
+    if(value instanceof String) ((ObjectNode) root).put(key, (String) value);
+    else if(value instanceof Text) ((ObjectNode) root).put(key, value.toString());
+    else if(value instanceof Boolean) ((ObjectNode) root).put(key, (Boolean) value);
+    else if(value instanceof Integer) ((ObjectNode) root).put(key, (Integer) value);
+    else if(value instanceof Long) ((ObjectNode) root).put(key, (Long) value);
+    else if(value instanceof Double) ((ObjectNode) root).put(key, (Double) value);
+    else if(value instanceof Float) ((ObjectNode) root).put(key, (Float) value);
+    else if(value instanceof Short) ((ObjectNode) root).put(key, (Short) value);
+    else if(value instanceof List){
+      logger.info("I'm making an array node of key " + key + " and value " + value);
+      ArrayNode arrayNode = ((ObjectNode) root).putArray(key);
+      for(Object element: (List<Object>)value)
+      {
+        listValToJsonArrayNode(arrayNode, element);
+      }
+      logger.info("Result: " + arrayNode.toString());
+    }
+    else if(value instanceof BooleanWritable) ((ObjectNode) root).put(key, ((BooleanWritable) value).get());
+    else if(value instanceof IntWritable) ((ObjectNode) root).put(key, ((IntWritable) value).get());
+    else if(value instanceof LongWritable) ((ObjectNode) root).put(key, ((LongWritable) value).get());
+    else if(value instanceof DoubleWritable) ((ObjectNode) root).put(key, ((DoubleWritable) value).get());
+    else if(value instanceof FloatWritable) ((ObjectNode) root).put(key, ((FloatWritable) value).get());
+    else if(value instanceof ShortWritable) ((ObjectNode) root).put(key, ((ShortWritable) value).get());
+    else if(value instanceof ArrayWritable){
+      keyValToJsonNode(root, key, ((ArrayWritable) value).toArray());
+    }
+    // Note that it is of great importance that MapWritable come before Map,
+    // as any class that is MapWritable is also Map, and would ping on that if
+    // it came first.
+    else if(value instanceof MapWritable)
+    {
+      ObjectNode objNode = mapper.createObjectNode();
+      Iterator it = ((Map) value).entrySet().iterator();
+      while(it.hasNext())
+      {
+        Map.Entry<Text, Writable> pair = (Map.Entry)it.next();
+        keyValToJsonNode(objNode, pair.getKey().toString(), pair.getValue());
+      }
+      ((ObjectNode) root).set(key,objNode);
+    }
+    else if(value instanceof Map)
+    {
+      ObjectNode objNode = mapper.createObjectNode();
+      Iterator it = ((Map) value).entrySet().iterator();
+      while(it.hasNext())
+      {
+        Map.Entry<String, Object> pair = (Map.Entry)it.next();
+        keyValToJsonNode(objNode, pair.getKey(), pair.getValue());
+      }
+      ((ObjectNode) root).set(key,objNode);
+    }
+
+    else if(value != null) ((ObjectNode) root).putPOJO(key, value);
+    else ((ObjectNode) root).putNull(key);
+  }
+
+  public static void listValToJsonArrayNode(JsonNode arrayRoot, Object value)
+  {
+    // There has got to be a better way, but this ugly use of a long line of
+    // instanceof will work.
+    // I think that in the future perhaps if there is serialization needed beyond
+    // the primitive types that we should require the user to provide a class object,
+    // as it's easy to teach a jackson ObjectMapper to do the right thing if you hand
+    // it a properly constructed Class.
+    if(value instanceof String) ((ArrayNode) arrayRoot).add((String) value);
+    else if(value instanceof Boolean) ((ArrayNode) arrayRoot).add((Boolean) value);
+    else if(value instanceof Integer) ((ArrayNode) arrayRoot).add((Integer) value);
+    else if(value instanceof Long) ((ArrayNode) arrayRoot).add((Long) value);
+    else if(value instanceof Double) ((ArrayNode) arrayRoot).add((Double) value);
+    else if(value instanceof Float) ((ArrayNode) arrayRoot).add((Float) value);
+    else if(value instanceof Short) ((ArrayNode) arrayRoot).add((Short) value);
+    else if(value instanceof String) ((ArrayNode) arrayRoot).add((String) value);
+    else if(value instanceof List){
+      logger.info("I'm making a nested array node of value " + value);
+      ArrayNode arrayNode = mapper.createArrayNode();
+      for(Object element: (List<Object>)value)
+      {
+        listValToJsonArrayNode(arrayNode, element);
+      }
+      ((ArrayNode) arrayRoot).add(arrayNode);
+      logger.info("Result: " + arrayNode.toString());
+    }
+    else if(value instanceof BooleanWritable) ((ArrayNode) arrayRoot).add(((BooleanWritable) value).get());
+    else if(value instanceof IntWritable) ((ArrayNode) arrayRoot).add(((IntWritable) value).get());
+    else if(value instanceof LongWritable) ((ArrayNode) arrayRoot).add(((LongWritable) value).get());
+    else if(value instanceof DoubleWritable) ((ArrayNode) arrayRoot).add(((DoubleWritable) value).get());
+    else if(value instanceof FloatWritable) ((ArrayNode) arrayRoot).add(((FloatWritable) value).get());
+    else if(value instanceof ShortWritable) ((ArrayNode) arrayRoot).add(((ShortWritable) value).get());
+    else if(value instanceof ArrayWritable){
+      listValToJsonArrayNode(arrayRoot, ((ArrayWritable) value).toArray());
+    }
+    // Note that it is of great importance that MapWritable come before Map,
+    // as any class that is MapWritable is also Map, and would ping on that if
+    // it came first.
+    else if(value instanceof MapWritable)
+    {
+      ObjectNode objNode = ((ArrayNode) arrayRoot).addObject();
+      Iterator it = ((Map) value).entrySet().iterator();
+      while(it.hasNext())
+      {
+        Map.Entry<Text, Writable> pair = (Map.Entry)it.next();
+        keyValToJsonNode(objNode, pair.getKey().toString(), pair.getValue());
+      }
+    }
+    else if(value instanceof Map)
+    {
+      ObjectNode objNode = ((ArrayNode) arrayRoot).addObject();
+      Iterator it = ((Map) value).entrySet().iterator();
+      while(it.hasNext())
+      {
+        Map.Entry<String, Object> pair = (Map.Entry)it.next();
+        keyValToJsonNode(objNode, pair.getKey(), pair.getValue());
+      }
+    }
+    else if(value != null) ((ArrayNode) arrayRoot).addPOJO(value);
+    else ((ArrayNode) arrayRoot).addNull();
+  }
+
 
   /**
    * Method to take an input json array format string and output a WritableArrayWritable
