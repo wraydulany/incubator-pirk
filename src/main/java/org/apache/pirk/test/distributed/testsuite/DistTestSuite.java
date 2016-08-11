@@ -400,7 +400,7 @@ public class DistTestSuite
     {
       // Build args
       String inputFormat = SystemConfiguration.getProperty("pir.dataInputFormat");
-      logger.info("inputFormat = " + inputFormat);
+      logger.info("Spark!   inputFormat = " + inputFormat);
       ArrayList<String> args = new ArrayList<>();
       args.add("-" + ResponderProps.PLATFORM + "=spark");
       args.add("-" + ResponderProps.DATAINPUTFORMAT + "=" + inputFormat);
