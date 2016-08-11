@@ -99,7 +99,8 @@ public class HDFS
       // delete file once the filesystem is closed
       if (deleteOnExit)
       {
-        fs.deleteOnExit(filePath);
+        //fs.deleteOnExit(filePath);
+        logger.info("NOPE! NO DELETING MY FILE!")
       }
     } catch (IOException e)
     {
