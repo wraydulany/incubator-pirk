@@ -121,8 +121,8 @@ public class HashSelectorsAndPartitionDataMapper extends Mapper<Text,MapWritable
   @Override
   public void map(Text key, MapWritable value, Context ctx) throws IOException, InterruptedException
   {
-    logger.debug("key = " + key.toString());
-    logger.debug("value: " + StringUtils.mapWritableToString(value));
+    logger.info("key = " + key.toString());
+    logger.info("value: " + StringUtils.mapWritableToString(value));
 
     boolean passFilter = true;
     if (filter != null)
