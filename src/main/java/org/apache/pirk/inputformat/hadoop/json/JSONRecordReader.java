@@ -184,7 +184,7 @@ public class JSONRecordReader extends RecordReader<Text,MapWritable>
         }
         else
         {
-          // We've guaranteed above that the valeu of the node at key is not null.
+          // We've guaranteed above that the value of the node at key is not null.
           mapValue.set(StringUtils.jacksonSimpleTypeHelper(jsonNode.get(key)).toString());
           value.put(mapKey, mapValue);
         }

@@ -445,6 +445,8 @@ public class BaseTests
       JsonNode dataMap = dataElements.get(i);
 
       boolean addElement = false;
+      logger.info("Required checks, SRCIP:" + dataMap.get(Inputs.SRCIP).textValue());
+
       if (dataMap.get(Inputs.SRCIP).toString().equals("55.55.55.55") || dataMap.get(Inputs.SRCIP).toString().equals("5.6.7.8"))
       {
         addElement = true;

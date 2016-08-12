@@ -92,7 +92,7 @@ public class DecryptResponse
 
     // Perform decryption on the encrypted columns
     ArrayList<BigInteger> rElements = decryptElements(response.getResponseElements(), paillier);
-    logger.info("rElements.size() = " + rElements.size());
+    logger.debug("rElements.size() = " + rElements.size());
 
     // Pull the necessary parameters
     int dataPartitionBitSize = queryInfo.getDataPartitionBitSize();
@@ -158,7 +158,6 @@ public class DecryptResponse
     {
       HashMap<String,ArrayList<QueryResponseJSON>> decValues = runner.getResultMap();
       resultMap.putAll(decValues);
-      logger.info("Results map after decryption before checks and file output: " + resultMap.toString());
     }
   }
 
