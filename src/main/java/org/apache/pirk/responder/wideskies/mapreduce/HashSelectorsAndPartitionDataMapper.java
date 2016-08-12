@@ -129,7 +129,7 @@ public class HashSelectorsAndPartitionDataMapper extends Mapper<Text,MapWritable
     Iterator it = value.entrySet().iterator();
     while(it.hasNext())
     {
-      Map.Entry<Text,Writable> pair = (Map.Entry) it.next();
+      Map.Entry<Text,Text> pair = (Map.Entry) it.next();
       tempstring += pair.getKey() + ": " + pair.getValue();
     }
     logger.info("map = " + tempstring);
