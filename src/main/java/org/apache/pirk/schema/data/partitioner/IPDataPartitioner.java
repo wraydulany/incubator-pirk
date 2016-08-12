@@ -24,8 +24,6 @@ import java.util.List;
 
 import org.apache.pirk.utils.SystemConfiguration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Partitioner class for IP addresses
  * <p>
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 public class IPDataPartitioner implements DataPartitioner
 {
   private static final long serialVersionUID = 1L;
-  private static final Logger logger = LoggerFactory.getLogger(IPDataPartitioner.class);
 
   @Override
   public ArrayList<BigInteger> toPartitions(Object object, String type)
@@ -88,19 +85,15 @@ public class IPDataPartitioner implements DataPartitioner
     ArrayList<BigInteger> parts = new ArrayList<>();
 
     int numArrayElementsToReturn = Integer.parseInt(SystemConfiguration.getProperty("pir.numReturnArrayElements", "1"));
-    logger.info("I am to return " + numArrayElementsToReturn + " array elements.");
     for (int i = 0; i < numArrayElementsToReturn; ++i)
     {
-      logger.info("Currently on element index " + i);
       if (elementList.size() > i) // we may have an element with a list rep that has fewer than numArrayElementsToReturn elements
       {
-        logger.info("Adding element " + elementList.get(i));
         parts.addAll(toPartitions(elementList.get(i), type));
       }
       else
       // pad with encryptions of zero
       {
-        logger.info("Ran out of elements, now going to add a padded partition.");
         parts.addAll(getPaddedPartitions(type));
       }
     }

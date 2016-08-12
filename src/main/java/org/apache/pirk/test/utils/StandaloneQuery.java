@@ -59,7 +59,6 @@ public class StandaloneQuery
   public static ArrayList<QueryResponseJSON> performStandaloneQuery(ArrayList<JsonNode> dataElements, String queryType, ArrayList<String> selectors,
       int numThreads, boolean testFalsePositive) throws IOException, InterruptedException, PIRException
   {
-    logger.info("Data elements: " + dataElements + ", queryType: " + queryType + ", selectors: " + selectors + ", numThreads: " + numThreads + ", testFalsePositive: " + testFalsePositive);
     logger.info("Performing watchlisting: ");
 
     ArrayList<QueryResponseJSON> results = null;
@@ -122,13 +121,12 @@ public class StandaloneQuery
     {
       String selector = QueryUtils.getSelectorByQueryTypeJSON(qSchema, jsonData);
       logger.info("selector = " + selector + " numDataElements = " + jsonData.size());
-      logger.info("data element = " + jsonData);
       try
       {
         pirResponder.addDataElement(selector, jsonData);
       } catch (Exception e)
       {
-        logger.error(e.toString());
+        logger.error("Could not add data element.", e);
         fail(e.toString());
       }
     }

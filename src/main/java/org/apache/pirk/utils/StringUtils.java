@@ -217,13 +217,11 @@ public class StringUtils
     else if(value instanceof Float) ((ObjectNode) root).put(key, (Float) value);
     else if(value instanceof Short) ((ObjectNode) root).put(key, (Short) value);
     else if(value instanceof List){
-      logger.info("I'm making an array node of key " + key + " and value " + value);
       ArrayNode arrayNode = ((ObjectNode) root).putArray(key);
       for(Object element: (List<Object>)value)
       {
         listValToJsonArrayNode(arrayNode, element);
       }
-      logger.info("Result: " + arrayNode.toString());
     }
     else if(value instanceof BooleanWritable) ((ObjectNode) root).put(key, ((BooleanWritable) value).get());
     else if(value instanceof IntWritable) ((ObjectNode) root).put(key, ((IntWritable) value).get());
@@ -281,14 +279,12 @@ public class StringUtils
     else if(value instanceof Short) ((ArrayNode) arrayRoot).add((Short) value);
     else if(value instanceof String) ((ArrayNode) arrayRoot).add((String) value);
     else if(value instanceof List){
-      logger.info("I'm making a nested array node of value " + value);
       ArrayNode arrayNode = mapper.createArrayNode();
       for(Object element: (List<Object>)value)
       {
         listValToJsonArrayNode(arrayNode, element);
       }
       ((ArrayNode) arrayRoot).add(arrayNode);
-      logger.info("Result: " + arrayNode.toString());
     }
     else if(value instanceof BooleanWritable) ((ArrayNode) arrayRoot).add(((BooleanWritable) value).get());
     else if(value instanceof IntWritable) ((ArrayNode) arrayRoot).add(((IntWritable) value).get());
@@ -401,13 +397,11 @@ public class StringUtils
       ((ObjectNode) node).put(key, (String) value);
     }
     else if(value instanceof ArrayList){
-      logger.info("I'm making an array node of key " + key + " and value " + value);
       ArrayNode arrayNode = ((ObjectNode) node).putArray(key);
       for(Object element: (ArrayList<Object>)value)
       {
         jacksonSimpleTypePutterHelper(arrayNode, element);
       }
-      logger.info("Result: " + node.toString());
     }
     else if(value instanceof Object)
     {

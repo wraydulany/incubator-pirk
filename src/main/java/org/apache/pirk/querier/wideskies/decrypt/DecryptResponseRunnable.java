@@ -92,13 +92,12 @@ public class DecryptResponseRunnable implements Runnable
       resultMap.put(selector, new ArrayList<QueryResponseJSON>());
     }
 
-    logger.info("numResults = " + rElements.size() + " numPartitionsPerDataElement = " + numPartitionsPerDataElement);
+    logger.debug("numResults = " + rElements.size() + " numPartitionsPerDataElement = " + numPartitionsPerDataElement);
 
-    logger.info("Go fuck yourself.");
     // Pull the hits for each selector
     int hits = 0;
     int maxHitsPerSelector = rElements.size() / numPartitionsPerDataElement; // Max number of data hits in the response elements for a given selector
-    logger.info("numHits = " + maxHitsPerSelector);
+    logger.debug("numHits = " + maxHitsPerSelector);
     while (hits < maxHitsPerSelector)
     {
       int selectorIndex = selectors.firstKey();
@@ -135,7 +134,6 @@ public class DecryptResponseRunnable implements Runnable
           ++partNum;
         }
 
-        logger.info("Zero Element?" + zeroElement);
         logger.debug("parts.size() = " + parts.size());
 
         if (!zeroElement)
@@ -147,11 +145,11 @@ public class DecryptResponseRunnable implements Runnable
             qrJOSN = QueryUtils.extractQueryResponseJSON(queryInfo, qSchema, parts);
           } catch (Exception e)
           {
-            logger.error("Caght query extraction exception ",e);
+            logger.error("Caught query extraction exception ",e);
             e.printStackTrace();
           }
           qrJOSN.setMapping(selectorName, selector);
-          logger.info("selector = " + selector + " qrJOSN = " + qrJOSN.getJSONString());
+          logger.debug("selector = " + selector + " qrJOSN = " + qrJOSN.getJSONString());
 
           // Add the hit for this selector - if we are using embedded selectors, check to make sure
           // that the hit's embedded selector in the qrJOSN and the once in the embedSelectorMap match
@@ -161,16 +159,14 @@ public class DecryptResponseRunnable implements Runnable
             if (!(embedSelectorMap.get(selectorIndex)).equals(qrJOSN.getValue(QueryResponseJSON.SELECTOR)))
             {
               addHit = false;
-              logger.info("qrJOSN embedded selector = " + qrJOSN.getValue(QueryResponseJSON.SELECTOR) + " != original embedded selector = "
+              logger.debug("qrJOSN embedded selector = " + qrJOSN.getValue(QueryResponseJSON.SELECTOR) + " != original embedded selector = "
                   + embedSelectorMap.get(selectorIndex));
             }
           }
           if (addHit)
           {
             ArrayList<QueryResponseJSON> selectorHitList = resultMap.get(selector);
-            logger.info("The selector hitlist before: " + selectorHitList);
             selectorHitList.add(qrJOSN);
-            logger.info("The selector hitlist after: " + selectorHitList);
             resultMap.put(selector, selectorHitList);
 
             // Add the selector into the wlJSONHit
@@ -182,6 +178,5 @@ public class DecryptResponseRunnable implements Runnable
       }
       ++hits;
     }
-    logger.info("WHY IS THIS EMPTY? The resultmap looks like this, I think: " + resultMap.toString());
   }
 }

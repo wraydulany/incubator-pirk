@@ -104,7 +104,6 @@ public class QueryResponseJSON implements Serializable
   {
     try
     {
-      logger.info("Trying to create a query response for jsonString: " + jsonString);
       jsonNode = (ObjectNode) mapper.readTree(jsonString);
     } catch (IOException e)
     {
@@ -158,33 +157,10 @@ public class QueryResponseJSON implements Serializable
   {
     if (dSchema == null)
     {
-      logger.info("Adding to key " + key + " the pojo " + val);
       StringUtils.jacksonSimpleTypePutterHelper(jsonNode, key, val);
     }
     else
     {
-      /*
-      if (dSchema.getArrayElements().contains(key))
-      {
-        if (!(val instanceof ArrayList))
-        {
-          ArrayList<Object> list;
-          if (!jsonObj.containsKey(key))
-          {
-            list = new ArrayList<>();
-            jsonObj.put(key, list);
-          }
-          list = (ArrayList<Object>) jsonObj.get(key);
-
-          if (!list.contains(val))          {            list.add(val);          }
-          jsonObj.put(key, list);
-        }
-        else{ jsonObj.put(key, val);    }
-      }
-      else if (dSchema.getNonArrayElements().contains(key) || key.equals(SELECTOR))      {        jsonObj.put(key, val);      }
-      else      {        logger.info("WARN: Schema does not contain key = " + key);      }
-
-       */
       if (dSchema.getArrayElements().contains(key))
       {
         // If val is not an instance of ArrayList, we pretend it doesn't exist and make an empty record for this array.
@@ -200,7 +176,6 @@ public class QueryResponseJSON implements Serializable
 
           // TODO this needs to be done as an ArrayList<Object>.
           ArrayList<String> templist = StringUtils.jsonNodeArrayToArrayList(jsonNode.get(key));
-          logger.info("I just got this list from a suspected array-type jsonNode: " + templist);
           list.addAll(templist);
 
 
@@ -212,10 +187,6 @@ public class QueryResponseJSON implements Serializable
           {
             StringUtils.jacksonSimpleTypePutterHelper((ArrayNode) jsonNode.get(key), element);
           }
-          /*
-          StringUtils.jacksonSimpleTypePutterHelper(jsonNode, key, val);
-          jsonNode.putPOJO(key, list);
-          */
         }
         else
         {
@@ -225,7 +196,6 @@ public class QueryResponseJSON implements Serializable
           }
           for(Object element: (ArrayList<Object>) val)
           {
-            logger.info("Adding val " + val + " of type " + val.getClass() + " to jsonNode " + jsonNode + " under key " + key);
             StringUtils.jacksonSimpleTypePutterHelper((ArrayNode) jsonNode.get(key), element);
           }
         }

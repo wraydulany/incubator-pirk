@@ -208,7 +208,7 @@ public class Responder
 
     // Update the rowCounter (next free column position) for the selector
     rowColumnCounters.set(rowIndex, (rowCounter + hitValPartitions.size()));
-    logger.info("new rowIndex = " + rowColumnCounters.get(rowIndex));
+    logger.debug("new rowIndex = " + rowColumnCounters.get(rowIndex));
   }
 
   // Sets the elements of the response object that will be passed back to the
