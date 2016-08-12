@@ -60,23 +60,7 @@ public class StringUtils
       Map.Entry<Writable,Object> pair = (Map.Entry) it.next();
       keyValToJsonNode(rootNode, pair.getKey().toString(), pair.getValue());
     }
-    /*
-    for( Writable key : map.keySet()){
 
-      rootnode.put(key.toString(), map.get(key).toString());
-    }
-
-    try
-    {
-      //jsonString = mapper.writeValueAsString(rootnode);
-      jsonString = mapper.writeValueAsString(map);
-    } catch (JsonProcessingException e)
-    {
-      logger.error("Error processing MapWritable into JSON.");
-      e.printStackTrace();
-      return map.toString();
-    }
-    */
     return rootNode.toString();
   }
 
@@ -479,9 +463,6 @@ public class StringUtils
       node.add((byte[]) value);
     }
     */
-    else if(value == null){
-      node.addNull();
-    }
     else node.addNull();
   }
 
